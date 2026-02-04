@@ -29,12 +29,13 @@ Sistema de feedback rápido e anônimo para colaboradores, usado como check-out 
 
 ## 🛠 Stack Tecnológica
 
-- **Frontend**: Next.js 15 + TypeScript
+- **Frontend**: Next.js 14.2 + TypeScript
 - **Estilo**: Tailwind CSS
 - **Gráficos**: Recharts
 - **Backend**: API Routes (Next.js)
-- **Banco de dados**: better-sqlite3
+- **Banco de dados**: SQLite3
 - **Tempo Real**: Server-Sent Events (SSE)
+- **Node.js**: 18.x (compatibilidade Vercel)
 
 ## 📋 Pré-requisitos
 
@@ -149,10 +150,10 @@ Retorna estatísticas dos feedbacks.
 
 A aplicação está **100% compatível com Vercel**:
 
-- ✅ Build otimizado para produção (Next.js 15)
+- ✅ Build otimizado para produção (Next.js 14.2)
 - ✅ API Routes funcionam como Serverless Functions  
-- ✅ better-sqlite3 configurado para `/tmp/` (diretório temporário da Vercel)
-- ✅ Sem warnings de dependências desatualizadas
+- ✅ SQLite3 configurado para `/tmp/` (diretório temporário da Vercel)
+- ✅ Node.js 18.x para máxima compatibilidade
 - ✅ Build estático + server-side rendering
 - ✅ Server-Sent Events para tempo real
 

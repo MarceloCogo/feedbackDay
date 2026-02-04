@@ -1,16 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['sqlite3']
-  },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push({
-        'sqlite3': 'commonjs sqlite3'
-      })
-    }
-    return config
-  }
+  serverExternalPackages: ['better-sqlite3']
 }
 
 module.exports = nextConfig

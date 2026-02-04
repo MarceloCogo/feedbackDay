@@ -1,4 +1,4 @@
-import sqlite3 from 'sqlite3'
+import Database from 'better-sqlite3'
 import { join } from 'path'
 
 const DB_PATH = process.env.NODE_ENV === 'production' 
@@ -14,10 +14,10 @@ export interface FeedbackData {
 }
 
 export function getDatabase() {
-  const db = new sqlite3.Database(DB_PATH)
+  const db = new Database(DB_PATH)
   
   // Criar tabela se não existir
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feedback (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       positive TEXT NOT NULL,
@@ -30,107 +30,86 @@ export function getDatabase() {
   return db
 }
 
-export function saveFeedback(data: FeedbackData): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    const stmt = db.prepare(`
-      INSERT INTO feedback (positive, negative, date, source)
-      VALUES (?, ?, ?, ?)
-    `)
-    
-    stmt.run([
-      JSON.stringify(data.positive),
-      JSON.stringify(data.negative),
-      data.date,
-      data.source
-    ], function(err) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(this.lastID)
-      }
-    })
-    
-    stmt.finalize()
-    db.close()
-  })
+export function saveFeedback(data: FeedbackData): number {
+  const db = getDatabase()
+  const stmt = db.prepare(`
+    INSERT INTO feedback (positive, negative, date, source)
+    VALUES (?, ?, ?, ?)
+  `)
+  
+  const result = stmt.run([
+    JSON.stringify(data.positive),
+    JSON.stringify(data.negative),
+    data.date,
+    data.source
+  ])
+  
+  db.close()
+  return result.lastInsertRowid as number
 }
 
-export function getAllFeedback(): Promise<FeedbackData[]> {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    db.all(`
-      SELECT * FROM feedback ORDER BY date DESC
-    `, (err, rows: any[]) => {
-      if (err) {
-        reject(err)
-      } else {
-        const feedback = rows.map(row => ({
-          id: row.id,
-          positive: JSON.parse(row.positive),
-          negative: JSON.parse(row.negative),
-          date: row.date,
-          source: row.source
-        }))
-        resolve(feedback)
-      }
-    })
-    
-    db.close()
-  })
+export function getAllFeedback(): FeedbackData[] {
+  const db = getDatabase()
+  const rows = db.prepare(`
+    SELECT * FROM feedback ORDER BY date DESC
+  `).all() as any[]
+  
+  const feedback = rows.map(row => ({
+    id: row.id,
+    positive: JSON.parse(row.positive),
+    negative: JSON.parse(row.negative),
+    date: row.date,
+    source: row.source
+  }))
+  
+  db.close()
+  return feedback
 }
 
 export function getFeedbackStats() {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    db.all(`
-      SELECT positive, negative FROM feedback
-    `, (err, rows: any[]) => {
-      if (err) {
-        reject(err)
-      } else {
-        const allFeedback = rows.map(row => ({
-          positive: JSON.parse(row.positive),
-          negative: JSON.parse(row.negative)
-        }))
-        
-        const categories = [
-          'Dinâmica do dia',
-          'Reuniões', 
-          'Comunicação',
-          'Espaço de trabalho',
-          'Foco / Produtividade',
-          'Colaboração'
-        ]
-        
-        const stats = {
-          total: rows.length,
-          positive: {} as Record<string, number>,
-          negative: {} as Record<string, number>
-        }
-        
-        categories.forEach(cat => {
-          stats.positive[cat] = 0
-          stats.negative[cat] = 0
-        })
-        
-        allFeedback.forEach(feedback => {
-          feedback.positive.forEach((cat: string) => {
-            if (stats.positive[cat] !== undefined) {
-              stats.positive[cat]++
-            }
-          })
-          feedback.negative.forEach((cat: string) => {
-            if (stats.negative[cat] !== undefined) {
-              stats.negative[cat]++
-            }
-          })
-        })
-        
-        resolve(stats)
+  const db = getDatabase()
+  const rows = db.prepare(`
+    SELECT positive, negative FROM feedback
+  `).all() as any[]
+  
+  const allFeedback = rows.map(row => ({
+    positive: JSON.parse(row.positive),
+    negative: JSON.parse(row.negative)
+  }))
+  
+  const categories = [
+    'Dinâmica do dia',
+    'Reuniões', 
+    'Comunicação',
+    'Espaço de trabalho',
+    'Foco / Produtividade',
+    'Colaboração'
+  ]
+  
+  const stats = {
+    total: rows.length,
+    positive: {} as Record<string, number>,
+    negative: {} as Record<string, number>
+  }
+  
+  categories.forEach(cat => {
+    stats.positive[cat] = 0
+    stats.negative[cat] = 0
+  })
+  
+  allFeedback.forEach(feedback => {
+    feedback.positive.forEach((cat: string) => {
+      if (stats.positive[cat] !== undefined) {
+        stats.positive[cat]++
       }
     })
-    
-    db.close()
+    feedback.negative.forEach((cat: string) => {
+      if (stats.negative[cat] !== undefined) {
+        stats.negative[cat]++
+      }
+    })
   })
+  
+  db.close()
+  return stats
 }

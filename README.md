@@ -35,7 +35,7 @@ Sistema de feedback rápido e anônimo para colaboradores, usado como check-out 
 - **Backend**: API Routes (Next.js)
 - **Banco de dados**: SQLite3
 - **Tempo Real**: Server-Sent Events (SSE)
-- **Node.js**: 18.x (compatibilidade Vercel)
+- **Node.js**: 24.x (compatibilidade Vercel)
 
 ## 📋 Pré-requisitos
 
@@ -153,7 +153,7 @@ A aplicação está **100% compatível com Vercel**:
 - ✅ Build otimizado para produção (Next.js 14.2)
 - ✅ API Routes funcionam como Serverless Functions  
 - ✅ SQLite3 configurado para `/tmp/` (diretório temporário da Vercel)
-- ✅ Node.js 18.x para máxima compatibilidade
+- ✅ Node.js 24.x para máxima compatibilidade
 - ✅ Build estático + server-side rendering
 - ✅ Server-Sent Events para tempo real
 

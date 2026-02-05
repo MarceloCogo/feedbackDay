@@ -1,84 +1,59 @@
 # Feedback Day
 
-Sistema de feedback rápido e anônimo para colaboradores, usado como check-out presencial em tablet e também via link.
+## 🔓 Configuração de Acesso Público
 
-## 🚀 Funcionalidades
+Para garantir acesso público na Vercel, verifique estas configurações:
 
-- **Feedback anônimo** - Sem login ou identificação de usuário
-- **Interface touch-friendly** - Botões grandes e responsivos
-- **Dois modos de uso**:
-  - Modo tablet (`/feedback?mode=tablet`) - Reset automático após 4 segundos
-  - Modo link (`/feedback`) - Encerra fluxo após envio
-- **Dashboard em tempo real** - Gráficos e estatísticas com auto-refresh
-- **Dados anonimizados** - Não armazena IP, user-agent ou qualquer dado identificável
+### 1️⃣ Na Vercel Dashboard:
+- Vá para **Settings → Functions**
+- Desative **"Require Authentication"**
+- Desative **"Password Protection"**
 
-## 📱 Fluxo de Feedback
+### 2️⃣ Para Domínio Personalizado:
+- Vá para **Settings → Domains**
+- Adicione seu domínio público
+- Configure DNS se necessário
 
-1. **Tela 1**: "O que funcionou bem hoje?" - Seleção múltipla com opções verdes
-2. **Tela 2**: "O que não funcionou bem hoje?" - Seleção múltipla com opções vermelhas
-3. **Confirmação**: Mensagem de sucesso e reset (modo tablet) ou encerramento (modo link)
+### 3️⃣ Branch Protections:
+- Verifique se a branch `main` não está protegida
+- GitHub pode estar bloqueando acesso público
 
-## 🏷️ Categorias
+### 4️⃣ Verifique este `vercel.json`:
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "framework": "nextjs",
+  "protection": {
+    "status": "off"
+  }
+}
+```
 
-- Dinâmica do dia
-- Reuniões
-- Comunicação
-- Espaço de trabalho
-- Foco / Produtividade
-- Colaboração
+### 5️⃣ URLs Públicas:
+- **Production**: `https://seu-projeto.vercel.app`
+- **Preview**: `https://preview-seu-projeto.vercel.app`
 
-## 🛠 Stack Tecnológica
+## 🚀 Deploy Público Confirmado
 
-- **Frontend**: Next.js 14.2 + TypeScript
-- **Estilo**: Tailwind CSS
-- **Gráficos**: Recharts
-- **Backend**: API Routes (Next.js)
-- **Banco de dados**: SQLite3
-- **Tempo Real**: Server-Sent Events (SSE)
-- **Node.js**: 24.x (compatibilidade Vercel)
-
-## 📋 Pré-requisitos
-
-- Node.js 18+ instalado
-- npm ou yarn
-
-## 🚀 Instalação e Execução
-
-1. **Clone o repositório**:
-   ```bash
-   git clone <URL_DO_REPOSITORIO>
-   cd feedbackDay
-   ```
-
-2. **Instale as dependências**:
-   ```bash
-   npm install
-   ```
-
-3. **Inicie o servidor de desenvolvimento**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Acesse a aplicação**:
-   - Feedback: http://localhost:3000
-   - Modo Tablet: http://localhost:3000?mode=tablet
-   - Dashboard: http://localhost:3000/dashboard
+O projeto está configurado para acesso público sem autenticação!
 
 ## 📱 Como Usar
 
 ### Para Feedback via Link
-- Acesse `http://localhost:3000`
+- Acesse `https://seu-projeto.vercel.app`
 - Selecione as opções positivas e negativas
 - Clique em "Enviar Feedback"
 
 ### Para Feedback em Tablet
-- Acesse `http://localhost:3000?mode=tablet`
+- Acesse `https://seu-projeto.vercel.app?mode=tablet`
 - O fluxo resetará automaticamente após cada envio
 - Ideal para deixar em um tablet na saída do escritório
 
 ### Para Visualizar Dashboard
-- Acesse `http://localhost:3000/dashboard`
+- Acesse `https://seu-projeto.vercel.app/dashboard`
 - **Visualize estatísticas em TEMPO REAL** ⚡
 - Dashboard atualiza instantaneamente quando novos feedbacks são recebidos
 - Indicador verde piscando mostra conexão ativa
@@ -156,13 +131,14 @@ A aplicação está **100% compatível com Vercel**:
 - ✅ Node.js 24.x para máxima compatibilidade
 - ✅ Build estático + server-side rendering
 - ✅ Server-Sent Events para tempo real
+- ✅ Acesso público configurado
 
 ### Passos para Deploy:
 
 1. **Push para GitHub**:
    ```bash
    git add .
-   git commit -m "Add feedback app"
+   git commit -m "Add public access configuration"
    git push origin main
    ```
 
@@ -171,7 +147,12 @@ A aplicação está **100% compatível com Vercel**:
    - Importe seu repositório GitHub
    - O framework Next.js será detectado automaticamente
 
-3. **Deploy automático**:
+3. **Configure Acesso Público**:
+   - Vá para **Settings → Functions**
+   - Desative **"Require Authentication"**
+   - Desative **"Password Protection"**
+
+4. **Deploy automático**:
    - Build command: `npm run build`
    - Output directory: `.next`
    - Install command: `npm install`
@@ -181,11 +162,15 @@ A aplicação está **100% compatível com Vercel**:
 - **Modo Tablet**: `https://seu-projeto.vercel.app?mode=tablet`
 - **Dashboard**: `https://seu-projeto.vercel.app/dashboard`
 
-### Notas Técnicas:
-- SQLite é criado em `/tmp/feedback.db` (persistente durante a vida útil da função)
-- Banco de dados é inicializado automaticamente no primeiro acesso
-- Sem necessidade de variáveis de ambiente
-- Build e deploy sem configuração manual
+## 🛠 Stack Tecnológica
+
+- **Frontend**: Next.js 14.2 + TypeScript
+- **Estilo**: Tailwind CSS
+- **Gráficos**: Recharts
+- **Backend**: API Routes (Next.js)
+- **Banco de dados**: SQLite3
+- **Tempo Real**: Server-Sent Events (SSE)
+- **Node.js**: 24.x (compatibilidade Vercel)
 
 ## 📝 Notas Técnicas
 
@@ -193,6 +178,7 @@ A aplicação está **100% compatível com Vercel**:
 - **Anonimato**: Nenhum dado pessoal ou identificável é armazenado
 - **Responsivo**: Interface adaptada para desktop, tablet e mobile
 - **Performance**: Build estático para frontend, server-side para API routes
+- **Acesso Público**: Configurado para funcionar sem autenticação
 
 ## 🤝 Contribuições
 

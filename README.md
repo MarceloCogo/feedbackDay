@@ -18,17 +18,14 @@ Para garantir acesso público na Vercel, verifique estas configurações:
 - Verifique se a branch `main` não está protegida
 - GitHub pode estar bloqueando acesso público
 
-### 4️⃣ Verifique este `vercel.json`:
+### 4️⃣ Arquivo `vercel.json` está correto:
 ```json
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
-  "framework": "nextjs",
-  "protection": {
-    "status": "off"
-  }
+  "framework": "nextjs"
 }
 ```
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 const CATEGORIES = [
   { id: 'dinamica', label: 'Dinâmica do dia', icon: '📅' },
@@ -20,6 +20,7 @@ function FeedbackPageContent() {
   const [isTabletMode, setIsTabletMode] = useState(false)
   
   const searchParams = useSearchParams()
+  const router = useRouter()
   const mode = searchParams.get('mode')
 
   useEffect(() => {
@@ -98,16 +99,25 @@ function FeedbackPageContent() {
           <p className="text-gray-600 mb-6">
             {isTabletMode 
               ? 'Seu feedback foi recebido. Preparando para próxima resposta...' 
-              : 'Seu feedback foi recebido e ajudará a melhorar nosso ambiente.'}
+              : 'Seu feedback foi recebido e ajudará a melhorar nosso ambiente.'
+            }
           </p>
-          {!isTabletMode && (
+          <div className="space-y-3">
+            {!isTabletMode && (
+              <button
+                onClick={resetForm}
+                className="block w-full bg-positive text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              >
+                Nova Resposta
+              </button>
+            )}
             <button
-              onClick={resetForm}
-              className="bg-positive text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              onClick={() => router.push('/pulse')}
+              className="block w-full bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
             >
-              Nova Resposta
+              Ver Clima do Time
             </button>
-          )}
+          </div>
         </div>
       </div>
     )

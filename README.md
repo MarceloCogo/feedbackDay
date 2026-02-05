@@ -56,6 +56,13 @@ O projeto está configurado para acesso público sem autenticação!
 - Indicador verde piscando mostra conexão ativa
 - Fallback automático para polling a cada 10 segundos se SSE falhar
 
+### Para Visualizar Clima do Time
+- Acesse `https://seu-projeto.vercel.app/pulse`
+- **Experiência visual e emocional** do time
+- Design cinematográfico dark mode para TVs e telas grandes
+- Indicadores visuais do clima do dia
+- Feedback em tempo real com animações elegantes
+
 ## 🗂️ Estrutura do Projeto
 
 ```
@@ -64,7 +71,8 @@ feedbackDay/
 │   ├── api/
 │   │   ├── feedback/      # API para salvar feedbacks
 │   │   └── stats/         # API para estatísticas
-│   ├── dashboard/         # Página do dashboard
+│   ├── dashboard/         # Página do dashboard analítico
+│   ├── pulse/             # Página do clima do time visual
 │   ├── globals.css        # Estilos globais
 │   ├── layout.tsx         # Layout principal
 │   └── page.tsx           # Página de feedback
@@ -158,6 +166,7 @@ A aplicação está **100% compatível com Vercel**:
 - **Feedback**: `https://seu-projeto.vercel.app`
 - **Modo Tablet**: `https://seu-projeto.vercel.app?mode=tablet`
 - **Dashboard**: `https://seu-projeto.vercel.app/dashboard`
+- **Clima do Time**: `https://seu-projeto.vercel.app/pulse`
 
 ## 🛠 Stack Tecnológica
 

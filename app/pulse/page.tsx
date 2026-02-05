@@ -77,14 +77,74 @@ export default function PulsePage() {
 
   const totalPositive = Object.values(stats?.positive || {}).reduce((sum, count) => sum + count, 0)
   const totalNegative = Object.values(stats?.negative || {}).reduce((sum, count) => sum + count, 0)
-  const ratio = totalPositive + totalNegative > 0 ? totalPositive / (totalPositive + totalNegative) : 0.5
+  const total = totalPositive + totalNegative
+  const hasNoData = total === 0
+  const hasOnlyPositive = totalPositive > 0 && totalNegative === 0
+  const hasOnlyNegative = totalNegative > 0 && totalPositive === 0
+  const ratio = total > 0 ? totalPositive / total : 0.5
   
   const getDayMood = () => {
+    if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando feedbacks' }
+    if (hasOnlyPositive) return { emoji: '🎉', color: 'from-green-500 to-green-300', text: 'Só positividade!' }
+    if (hasOnlyNegative) return { emoji: '🎯', color: 'from-red-500 to-red-300', text: 'Foco nos desafios' }
     if (ratio > 0.7) return { emoji: '🌟', color: 'from-green-600 to-green-400', text: 'Excelente' }
     if (ratio > 0.6) return { emoji: '✨', color: 'from-green-500 to-green-300', text: 'Bom' }
     if (ratio > 0.4) return { emoji: '⚖️', color: 'from-yellow-500 to-yellow-300', text: 'Equilibrado' }
     if (ratio > 0.3) return { emoji: '🌗', color: 'from-orange-500 to-orange-300', text: 'Desafiador' }
     return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil' }
+  }
+
+  // Estado especial: Sem dados ainda
+  if (hasNoData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
+        {/* Hero Section - Sem dados */}
+        <div className="relative h-screen flex flex-col items-center justify-center px-4">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(156,163,175,0.1)_0%,transparent_70%)]"></div>
+          
+          <div className="relative z-10 text-center max-w-4xl mx-auto">
+            <div className="text-8xl mb-8 animate-bounce">⏳</div>
+            
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
+              Ainda não temos feedbacks
+            </h1>
+            
+            <p className="text-2xl text-gray-400 mb-12 max-w-2xl mx-auto">
+              O dia está começando e estamos esperando as primeiras impressões do time
+            </p>
+            
+            <div className="flex flex-col md:flex-row gap-6 justify-center">
+              <a 
+                href="/"
+                className="inline-flex items-center justify-center px-8 py-4 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl transition-all transform hover:scale-105"
+              >
+                <span className="mr-2">📝</span>
+                Dar o primeiro feedback
+              </a>
+              
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all"
+              >
+                <span className="mr-2">🔄</span>
+                Atualizar
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Seções vazias com mensagens */}
+        <div className="py-16 px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-400 mb-4">O espaço está pronto</h2>
+              <p className="text-gray-600 text-xl">Assim que os feedbacks chegarem, o clima do time vai aparecer aqui</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const mood = getDayMood()
@@ -140,6 +200,16 @@ export default function PulsePage() {
             </h2>
             <div className="text-gray-400 text-xl">Nossas conquistas hoje</div>
           </div>
+          
+          {/* Mensagem especial se só há positivos */}
+          {hasOnlyPositive && (
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center px-6 py-3 bg-green-900/30 border border-green-700/50 rounded-full">
+                <span className="text-2xl mr-2">🎉</span>
+                <span className="text-green-300 font-medium">Só positividade até agora! Nenhum desafio reportado.</span>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CATEGORIES.map((category) => {
@@ -200,6 +270,16 @@ export default function PulsePage() {
             <div className="text-gray-400 text-xl">Nossos desafios hoje</div>
           </div>
           
+          {/* Mensagem especial se só há negativos */}
+          {hasOnlyNegative && (
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center px-6 py-3 bg-red-900/30 border border-red-700/50 rounded-full">
+                <span className="text-2xl mr-2">🎯</span>
+                <span className="text-red-300 font-medium">Foco nos desafios hoje. Vamos transformar isso em oportunidades!</span>
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CATEGORIES.map((category) => {
               const count = stats?.negative[category.label] || 0
@@ -259,37 +339,73 @@ export default function PulsePage() {
             <div className="text-gray-400 text-xl">A história do nosso hoje</div>
           </div>
           
-          <div className="relative h-96 bg-gradient-to-r from-green-950/20 to-red-950/20 rounded-3xl backdrop-blur-sm border border-gray-800 overflow-hidden">
-            <div className="absolute inset-0 flex">
-              <div 
-                className="bg-gradient-to-b from-green-600/40 to-green-400/40 transition-all duration-1000"
-                style={{ width: `${ratio * 100}%` }}
-              ></div>
-              <div 
-                className="bg-gradient-to-b from-red-600/40 to-red-400/40 transition-all duration-1000"
-                style={{ width: `${(1 - ratio) * 100}%` }}
-              ></div>
-            </div>
-            
-            <div className="absolute inset-0 flex items-center justify-center">
+          {/* Estado especial: Sem dados ou só um tipo */}
+          {hasNoData ? (
+            <div className="relative h-96 bg-gradient-to-r from-gray-950/20 to-gray-950/20 rounded-3xl backdrop-blur-sm border border-gray-800 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-8xl md:text-9xl font-bold">
-                  {ratio > 0.5 ? (
-                    <span className="bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-                      {totalPositive}
-                    </span>
-                  ) : (
-                    <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
-                      {totalNegative}
-                    </span>
-                  )}
-                </div>
-                <div className="text-2xl text-gray-400 mt-4">
-                  {ratio > 0.5 ? 'positivos' : 'desafios'}
+                <div className="text-6xl mb-4">📊</div>
+                <div className="text-2xl text-gray-400">
+                  Os gráficos aparecem quando chegarem os primeiros feedbacks
                 </div>
               </div>
             </div>
-          </div>
+          ) : hasOnlyPositive ? (
+            <div className="relative h-96 bg-gradient-to-r from-green-950/20 to-green-950/20 rounded-3xl backdrop-blur-sm border border-green-800/50 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-green-600/40 to-green-400/40"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
+                    {totalPositive}
+                  </div>
+                  <div className="text-2xl text-green-300 mt-4">mensagens positivas</div>
+                </div>
+              </div>
+            </div>
+          ) : hasOnlyNegative ? (
+            <div className="relative h-96 bg-gradient-to-r from-red-950/20 to-red-950/20 rounded-3xl backdrop-blur-sm border border-red-800/50 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-red-600/40 to-red-400/40"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+                    {totalNegative}
+                  </div>
+                  <div className="text-2xl text-red-300 mt-4">desafios identificados</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative h-96 bg-gradient-to-r from-green-950/20 to-red-950/20 rounded-3xl backdrop-blur-sm border border-gray-800 overflow-hidden">
+              <div className="absolute inset-0 flex">
+                <div 
+                  className="bg-gradient-to-b from-green-600/40 to-green-400/40 transition-all duration-1000"
+                  style={{ width: `${ratio * 100}%` }}
+                ></div>
+                <div 
+                  className="bg-gradient-to-b from-red-600/40 to-red-400/40 transition-all duration-1000"
+                  style={{ width: `${(1 - ratio) * 100}%` }}
+                ></div>
+              </div>
+              
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-8xl md:text-9xl font-bold">
+                    {ratio > 0.5 ? (
+                      <span className="bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
+                        {totalPositive}
+                      </span>
+                    ) : (
+                      <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+                        {totalNegative}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-2xl text-gray-400 mt-4">
+                    {ratio > 0.5 ? 'positivos' : 'desafios'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="mt-8 flex justify-between text-gray-500">
             <div className="text-center">

@@ -16,6 +16,8 @@ function FeedbackPageContent() {
   const [currentStep, setCurrentStep] = useState<'positive' | 'negative' | 'success'>('positive')
   const [selectedPositive, setSelectedPositive] = useState<string[]>([])
   const [selectedNegative, setSelectedNegative] = useState<string[]>([])
+  const [noPositiveSelection, setNoPositiveSelection] = useState(false)
+  const [noNegativeSelection, setNoNegativeSelection] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isTabletMode, setIsTabletMode] = useState(false)
   
@@ -29,12 +31,22 @@ function FeedbackPageContent() {
 
   const toggleCategory = (categoryLabel: string, type: 'positive' | 'negative') => {
     if (type === 'positive') {
+      // Se marcar uma categoria, desmarcar "Nada a destacar hoje"
+      if (!selectedPositive.includes(categoryLabel)) {
+        setNoPositiveSelection(false)
+      }
+      
       setSelectedPositive(prev => 
         prev.includes(categoryLabel) 
           ? prev.filter(c => c !== categoryLabel)
           : [...prev, categoryLabel]
       )
     } else {
+      // Se marcar uma categoria, desmarcar "Nada a destacar hoje"
+      if (!selectedNegative.includes(categoryLabel)) {
+        setNoNegativeSelection(false)
+      }
+      
       setSelectedNegative(prev => 
         prev.includes(categoryLabel) 
           ? prev.filter(c => c !== categoryLabel)
@@ -43,16 +55,50 @@ function FeedbackPageContent() {
     }
   }
 
+  const toggleNoSelection = (type: 'positive' | 'negative') => {
+    if (type === 'positive') {
+      const newValue = !noPositiveSelection
+      
+      // Se selecionar "Nada a destacar hoje", limpar todas as categorias
+      if (newValue) {
+        setSelectedPositive([])
+      }
+      
+      setNoPositiveSelection(newValue)
+    } else {
+      const newValue = !noNegativeSelection
+      
+      // Se selecionar "Nada a destacar hoje", limpar todas as categorias
+      if (newValue) {
+        setSelectedNegative([])
+      }
+      
+      setNoNegativeSelection(newValue)
+    }
+  }
+
+  const canContinuePositive = () => {
+    return selectedPositive.length > 0 || noPositiveSelection
+  }
+
+  const canContinueNegative = () => {
+    return selectedNegative.length > 0 || noNegativeSelection
+  }
+
   const handleSubmitPositive = () => {
-    if (selectedPositive.length > 0) {
+    if (canContinuePositive()) {
       setCurrentStep('negative')
     }
   }
 
   const handleSubmit = async () => {
-    if (selectedNegative.length === 0) return
+    if (!canContinueNegative()) return
     
     setIsSubmitting(true)
+    
+    // Prepara os dados para envio
+    const positiveData = noPositiveSelection ? ['Nada a destacar hoje'] : selectedPositive
+    const negativeData = noNegativeSelection ? ['Nada a destacar hoje'] : selectedNegative
     
     try {
       const response = await fetch('/api/feedback', {
@@ -61,8 +107,8 @@ function FeedbackPageContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          positive: selectedPositive,
-          negative: selectedNegative,
+          positive: positiveData,
+          negative: negativeData,
           date: new Date().toISOString(),
           source: isTabletMode ? 'tablet' : 'link'
         }),
@@ -88,6 +134,8 @@ function FeedbackPageContent() {
     setCurrentStep('positive')
     setSelectedPositive([])
     setSelectedNegative([])
+    setNoPositiveSelection(false)
+    setNoNegativeSelection(false)
   }
 
   if (currentStep === 'success') {
@@ -124,7 +172,7 @@ function FeedbackPageContent() {
               <h1 className="text-3xl font-bold text-positive mb-2">
                 🌟 O que funcionou bem hoje?
               </h1>
-              <p className="text-gray-600">Selecione uma ou mais opções</p>
+              <p className="text-gray-600">Selecione uma ou mais opções, ou marque se nada a destacar</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -132,9 +180,12 @@ function FeedbackPageContent() {
                 <button
                   key={category.id}
                   onClick={() => toggleCategory(category.label, 'positive')}
+                  disabled={noPositiveSelection}
                   className={`p-6 rounded-xl border-2 transition-all transform hover:scale-105 ${
                     selectedPositive.includes(category.label)
                       ? 'bg-positive text-white border-positive'
+                      : noPositiveSelection
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-positive'
                   }`}
                 >
@@ -143,13 +194,31 @@ function FeedbackPageContent() {
                 </button>
               ))}
             </div>
+
+            {/* Opção "Nada a destacar hoje" */}
+            <div className="mb-8">
+              <button
+                onClick={() => toggleNoSelection('positive')}
+                disabled={selectedPositive.length > 0}
+                className={`w-full p-6 rounded-xl border-2 transition-all transform hover:scale-105 flex items-center justify-center space-x-3 ${
+                  noPositiveSelection
+                    ? 'bg-gray-100 text-gray-700 border-gray-400'
+                    : selectedPositive.length > 0
+                    ? 'bg-white text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                }`}
+              >
+                <span className="text-2xl">➖</span>
+                <span className="font-semibold">Nada a destacar hoje</span>
+              </button>
+            </div>
             
             <div className="text-center">
               <button
                 onClick={handleSubmitPositive}
-                disabled={selectedPositive.length === 0}
+                disabled={!canContinuePositive()}
                 className={`px-8 py-4 rounded-lg font-bold text-white text-lg transition-all ${
-                  selectedPositive.length > 0
+                  canContinuePositive()
                     ? 'bg-positive hover:bg-green-600 transform hover:scale-105'
                     : 'bg-gray-300 cursor-not-allowed'
                 }`}
@@ -164,7 +233,7 @@ function FeedbackPageContent() {
               <h1 className="text-3xl font-bold text-negative mb-2">
                 🎯 O que não funcionou bem hoje?
               </h1>
-              <p className="text-gray-600">Selecione uma ou mais opções</p>
+              <p className="text-gray-600">Selecione uma ou mais opções, ou marque se nada a destacar</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -172,9 +241,12 @@ function FeedbackPageContent() {
                 <button
                   key={category.id}
                   onClick={() => toggleCategory(category.label, 'negative')}
+                  disabled={noNegativeSelection}
                   className={`p-6 rounded-xl border-2 transition-all transform hover:scale-105 ${
                     selectedNegative.includes(category.label)
                       ? 'bg-negative text-white border-negative'
+                      : noNegativeSelection
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-negative'
                   }`}
                 >
@@ -182,6 +254,24 @@ function FeedbackPageContent() {
                   <div className="font-medium text-sm">{category.label}</div>
                 </button>
               ))}
+            </div>
+
+            {/* Opção "Nada a destacar hoje" */}
+            <div className="mb-8">
+              <button
+                onClick={() => toggleNoSelection('negative')}
+                disabled={selectedNegative.length > 0}
+                className={`w-full p-6 rounded-xl border-2 transition-all transform hover:scale-105 flex items-center justify-center space-x-3 ${
+                  noNegativeSelection
+                    ? 'bg-gray-100 text-gray-700 border-gray-400'
+                    : selectedNegative.length > 0
+                    ? 'bg-white text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                }`}
+              >
+                <span className="text-2xl">➖</span>
+                <span className="font-semibold">Nada a destacar hoje</span>
+              </button>
             </div>
             
             <div className="text-center">
@@ -194,9 +284,9 @@ function FeedbackPageContent() {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={selectedNegative.length === 0 || isSubmitting}
+                  disabled={!canContinueNegative()}
                   className={`px-8 py-4 rounded-lg font-bold text-white text-lg transition-all ${
-                    selectedNegative.length > 0 && !isSubmitting
+                    canContinueNegative()
                       ? 'bg-negative hover:bg-red-600 transform hover:scale-105'
                       : 'bg-gray-300 cursor-not-allowed'
                   }`}

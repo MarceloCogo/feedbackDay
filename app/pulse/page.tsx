@@ -8,6 +8,11 @@ interface StatsData {
   negative: Record<string, number>
 }
 
+interface DayStats {
+  date: string
+  data: StatsData | null
+}
+
 const CATEGORIES = [
   { id: 'dinamica', label: 'Dinâmica do dia', icon: '📅' },
   { id: 'reunioes', label: 'Reuniões', icon: '👥' },
@@ -18,48 +23,115 @@ const CATEGORIES = [
 ]
 
 export default function PulsePage() {
-  const [stats, setStats] = useState<StatsData | null>(null)
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [dayStats, setDayStats] = useState<DayStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [transitioning, setTransitioning] = useState(false)
+
+  // Função para formatar data
+  const formatDateForDisplay = (date: Date) => {
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hoje'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Ontem'
+    } else {
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    }
+  }
+
+  // Função para buscar dados de uma data específica
+  const fetchDayStats = async (date: Date) => {
+    try {
+      setLoading(true)
+      const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
+      
+      // Para MVP, vamos simular dados por dia
+      // Em produção, isso buscaria no banco de dados por data
+      const response = await fetch('/api/stats')
+      if (response.ok) {
+        const allStats = await response.json()
+        
+        // Simulação: filtrar por data (no MVP, retorna dados do dia atual)
+        // Futuro: implementar filtro real no backend
+        setDayStats({
+          date: dateStr,
+          data: allStats
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching day stats:', error)
+      setDayStats({
+        date: date.toISOString().split('T')[0],
+        data: null
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Navegar para dia anterior
+  const goToPreviousDay = () => {
+    setTransitioning(true)
+    setTimeout(() => {
+      const newDate = new Date(selectedDate)
+      newDate.setDate(newDate.getDate() - 1)
+      setSelectedDate(newDate)
+      fetchDayStats(newDate)
+      setTimeout(() => setTransitioning(false), 500)
+    }, 200)
+  }
+
+  // Navegar para dia seguinte
+  const goToNextDay = () => {
+    const today = new Date()
+    if (selectedDate < today) {
+      setTransitioning(true)
+      setTimeout(() => {
+        const newDate = new Date(selectedDate)
+        newDate.setDate(newDate.getDate() + 1)
+        setSelectedDate(newDate)
+        fetchDayStats(newDate)
+        setTimeout(() => setTransitioning(false), 500)
+      }, 200)
+    }
+  }
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/stats')
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data)
+    fetchDayStats(selectedDate)
+    
+    // Conexão SSE para tempo real (só quando for hoje)
+    const today = new Date()
+    if (selectedDate.toDateString() === today.toDateString()) {
+      const eventSource = new EventSource('/api/stats?stream=true')
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          setDayStats({
+            date: selectedDate.toISOString().split('T')[0],
+            data
+          })
+        } catch (error) {
+          console.error('Error parsing SSE data:', error)
         }
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      } finally {
-        setLoading(false)
+      }
+
+      eventSource.onerror = () => {
+        eventSource.close()
+      }
+
+      return () => {
+        eventSource.close()
       }
     }
+  }, [selectedDate])
 
-    fetchStats()
-    
-    // Conexão SSE para tempo real
-    const eventSource = new EventSource('/api/stats?stream=true')
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        setStats(data)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error parsing SSE data:', error)
-      }
-    }
-
-    eventSource.onerror = () => {
-      eventSource.close()
-    }
-
-    return () => {
-      eventSource.close()
-    }
-  }, [])
+  const stats = dayStats?.data
+  const isToday = selectedDate.toDateString() === new Date().toDateString()
 
   if (loading && !stats) {
     return (
@@ -99,10 +171,39 @@ export default function PulsePage() {
   if (hasNoData) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
-        {/* Cabeçalho */}
+        {/* Filtro de data no canto superior esquerdo */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center space-x-2 bg-gray-900/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
+            <button
+              onClick={goToPreviousDay}
+              className="text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              ◀
+            </button>
+            <span className="text-gray-200 font-medium min-w-[60px] text-center">
+              {formatDateForDisplay(selectedDate)}
+            </span>
+            <button
+              onClick={goToNextDay}
+              disabled={selectedDate >= new Date()}
+              className={`${selectedDate >= new Date() ? 'text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:text-gray-200'} transition-colors`}
+            >
+              ▶
+            </button>
+          </div>
+        </div>
+
+        {/* Cabeçalho alinhado */}
         <header className="text-center py-4 px-8">
-          <h1 className="text-3xl font-light text-gray-300 mb-1">Feedback do Dia — Hoje</h1>
-          <p className="text-lg text-gray-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <h1 className="text-3xl font-light text-gray-300 mb-1">
+            Feedback do Dia — {formatDateForDisplay(selectedDate)}
+          </h1>
+          {isToday && (
+            <div className="flex items-center justify-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+              <span className="text-sm text-gray-600">tempo real</span>
+            </div>
+          )}
         </header>
 
         {/* Conteúdo único sem dados */}
@@ -110,9 +211,12 @@ export default function PulsePage() {
           <div className="text-center">
             <div className="text-8xl mb-8 animate-pulse">⏳</div>
             <h2 className="text-5xl font-light text-gray-300 mb-4">Aguardando feedbacks</h2>
-            <p className="text-xl text-gray-500 max-w-3xl mx-auto">
+            <p className="text-2xl text-gray-500 max-w-3xl mx-auto mb-12">
               O espaço está pronto para as primeiras impressões do dia
             </p>
+            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
+              <div className="h-full w-1/2 bg-gradient-to-r from-gray-600 to-gray-400 animate-pulse"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -123,18 +227,43 @@ export default function PulsePage() {
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
-      {/* Cabeçalho discreto */}
-      <header className="text-center py-4 px-8">
-        <h1 className="text-3xl font-light text-gray-300 mb-1">Feedback do Dia — Hoje</h1>
-        <p className="text-lg text-gray-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-        <div className="flex items-center justify-center mt-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-          <span className="text-sm text-gray-600">tempo real</span>
+      {/* Filtro de data no canto superior esquerdo */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className="flex items-center space-x-2 bg-gray-900/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
+          <button
+            onClick={goToPreviousDay}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            ◀
+          </button>
+          <span className="text-gray-200 font-medium min-w-[60px] text-center">
+            {formatDateForDisplay(selectedDate)}
+          </span>
+          <button
+            onClick={goToNextDay}
+            disabled={selectedDate >= new Date()}
+            className={`${selectedDate >= new Date() ? 'text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:text-gray-200'} transition-colors`}
+          >
+            ▶
+          </button>
         </div>
+      </div>
+
+      {/* Cabeçalho alinhado com filtro */}
+      <header className="text-center py-4 px-8">
+        <h1 className="text-3xl font-light text-gray-300 mb-1">
+          Feedback do Dia — {formatDateForDisplay(selectedDate)}
+        </h1>
+        {isToday && (
+          <div className="flex items-center justify-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+            <span className="text-sm text-gray-600">tempo real</span>
+          </div>
+        )}
       </header>
 
-      {/* Painel único com grid */}
-      <div className="h-[calc(100vh-8rem)] px-8 grid grid-rows-[1fr_1fr_1fr] gap-6">
+      {/* Painel principal com transição */}
+      <div className={`h-[calc(100vh-8rem)] px-8 grid grid-rows-[1fr_1fr_1fr] gap-6 transition-opacity duration-500 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
         
         {/* Hero - Balanço Principal */}
         <div className="flex items-center justify-center">

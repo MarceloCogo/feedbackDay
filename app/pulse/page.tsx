@@ -63,13 +63,14 @@ export default function PulsePage() {
 
   if (loading && !stats) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-pulse flex space-x-2 justify-center">
-            <div className="h-3 w-3 bg-green-500 rounded-full animate-bounce"></div>
-            <div className="h-3 w-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="h-3 w-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="animate-pulse flex space-x-3 justify-center mb-6">
+            <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce"></div>
+            <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
           </div>
+          <div className="text-2xl text-gray-400">Carregando clima do time...</div>
         </div>
       </div>
     )
@@ -84,65 +85,75 @@ export default function PulsePage() {
   const ratio = total > 0 ? totalPositive / total : 0.5
   
   const getDayMood = () => {
-    if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando feedbacks' }
-    if (hasOnlyPositive) return { emoji: '🎉', color: 'from-green-500 to-green-300', text: 'Só positividade!' }
-    if (hasOnlyNegative) return { emoji: '🎯', color: 'from-red-500 to-red-300', text: 'Foco nos desafios' }
-    if (ratio > 0.7) return { emoji: '🌟', color: 'from-green-600 to-green-400', text: 'Excelente' }
-    if (ratio > 0.6) return { emoji: '✨', color: 'from-green-500 to-green-300', text: 'Bom' }
-    if (ratio > 0.4) return { emoji: '⚖️', color: 'from-yellow-500 to-yellow-300', text: 'Equilibrado' }
-    if (ratio > 0.3) return { emoji: '🌗', color: 'from-orange-500 to-orange-300', text: 'Desafiador' }
-    return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil' }
+    if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando', status: 'Sem dados' }
+    if (hasOnlyPositive) return { emoji: '🎉', color: 'from-green-500 to-green-300', text: 'Excelente', status: 'Só positividade' }
+    if (hasOnlyNegative) return { emoji: '🎯', color: 'from-red-500 to-red-300', text: 'Foco em desafios', status: 'Só desafios' }
+    if (ratio > 0.7) return { emoji: '🌟', color: 'from-green-600 to-green-400', text: 'Excelente', status: 'Dia muito positivo' }
+    if (ratio > 0.6) return { emoji: '✨', color: 'from-green-500 to-green-300', text: 'Bom', status: 'Dia positivo' }
+    if (ratio > 0.4) return { emoji: '⚖️', color: 'from-yellow-500 to-yellow-300', text: 'Equilibrado', status: 'Dia equilibrado' }
+    if (ratio > 0.3) return { emoji: '🌗', color: 'from-orange-500 to-orange-300', text: 'Desafiador', status: 'Dia desafiador' }
+    return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil', status: 'Dia difícil' }
+  }
+
+  const getData = () => {
+    const date = new Date()
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      day: 'numeric', 
+      month: 'long' 
+    }
+    return date.toLocaleDateString('pt-BR', options)
+  }
+
+  const getReflectionMessage = () => {
+    if (hasNoData) return "O dia está começando e o tempo está aberto para novas histórias."
+    if (hasOnlyPositive) return "Hoje celebramos cada conquista. Amanhã construímos sobre esse sucesso."
+    if (hasOnlyNegative) return "Cada desafio hoje é uma oportunidade amanhã."
+    if (ratio > 0.7) return "Hoje florescemos em conjunto. Amanhã cultivamos mais."
+    if (ratio > 0.5) return "O equilíbrio de hoje fortalece o amanhã."
+    return "Aprendendo hoje para crescermos amanhã."
   }
 
   // Estado especial: Sem dados ainda
   if (hasNoData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-        {/* Hero Section - Sem dados */}
-        <div className="relative h-screen flex flex-col items-center justify-center px-4">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-transparent"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(156,163,175,0.1)_0%,transparent_70%)]"></div>
-          
-          <div className="relative z-10 text-center max-w-4xl mx-auto">
-            <div className="text-8xl mb-8 animate-bounce">⏳</div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-              Ainda não temos feedbacks
-            </h1>
-            
-            <p className="text-2xl text-gray-400 mb-12 max-w-2xl mx-auto">
-              O dia está começando e estamos esperando as primeiras impressões do time
+        {/* Cabeçalho */}
+        <header className="text-center py-6 px-8">
+          <h1 className="text-4xl font-light text-gray-300 mb-2">Clima do Time — Hoje</h1>
+          <p className="text-xl text-gray-500">{getData()}</p>
+        </header>
+
+        {/* Hero - Sem dados */}
+        <div className="h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-9xl mb-8 animate-pulse">⏳</div>
+            <h2 className="text-6xl font-light text-gray-300 mb-4">Aguardando feedbacks</h2>
+            <p className="text-2xl text-gray-500 max-w-3xl mx-auto mb-12">
+              O espaço está pronto para as primeiras impressões do dia
             </p>
-            
-            <div className="flex flex-col md:flex-row gap-6 justify-center">
-              <a 
-                href="/"
-                className="inline-flex items-center justify-center px-8 py-4 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl transition-all transform hover:scale-105"
-              >
-                <span className="mr-2">📝</span>
-                Dar o primeiro feedback
-              </a>
-              
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all"
-              >
-                <span className="mr-2">🔄</span>
-                Atualizar
-              </button>
+            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
+              <div className="h-full w-1/2 bg-gradient-to-r from-gray-600 to-gray-400 animate-pulse"></div>
             </div>
           </div>
         </div>
-        
-        {/* Seções vazias com mensagens */}
-        <div className="py-16 px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-400 mb-4">O espaço está pronto</h2>
-              <p className="text-gray-600 text-xl">Assim que os feedbacks chegarem, o clima do time vai aparecer aqui</p>
-            </div>
+
+        {/* Seções vazias */}
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-8xl mb-6">📊</div>
+            <p className="text-3xl text-gray-400">O clima do time aparece aqui</p>
           </div>
         </div>
+
+        {/* Mensagem final */}
+        <footer className="min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-4xl">
+            <p className="text-4xl font-light text-gray-400 italic">
+              "O tempo está aberto. Cada feedback constrói nossa história."
+            </p>
+          </div>
+        </footer>
       </div>
     )
   }
@@ -151,65 +162,68 @@ export default function PulsePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
-      {/* Hero Section */}
-      <div className="relative h-screen flex flex-col items-center justify-center px-4">
-        {/* Background Atmosphere */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.1)_0%,transparent_70%)]"></div>
-        
-        <div className="relative z-10 text-center max-w-6xl mx-auto">
-          <h1 className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-            Como foi o dia do time?
-          </h1>
-          
-          <div className="mt-16 relative">
-            {/* Day Mood Indicator */}
-            <div className={`w-64 h-64 mx-auto rounded-full bg-gradient-to-br ${mood.color} shadow-2xl flex items-center justify-center transform transition-all duration-1000 hover:scale-105`}>
-              <div className="text-8xl animate-pulse">{mood.emoji}</div>
-            </div>
-            
-            {/* Mood Text */}
-            <div className="mt-8 text-2xl font-light text-gray-300">
-              {mood.text}
-            </div>
-            
-            {/* Visual Balance Bar */}
-            <div className="mt-12 max-w-2xl mx-auto">
-              <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+      {/* Cabeçalho discreto */}
+      <header className="text-center py-6 px-8">
+        <h1 className="text-4xl font-light text-gray-300 mb-2">Clima do Time — Hoje</h1>
+        <p className="text-xl text-gray-500">{getData()}</p>
+        <div className="flex items-center justify-center mt-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+          <span className="text-sm text-gray-600">tempo real</span>
+        </div>
+      </header>
+
+      {/* Hero Visual Principal */}
+      <section className="min-h-screen flex items-center justify-center px-8">
+        <div className="text-center max-w-6xl mx-auto">
+          {/* Indicador visual principal */}
+          <div className="relative mb-12">
+            {/* Balanço visual gigante */}
+            <div className="w-96 h-96 mx-auto relative">
+              {/* Círculo de fundo */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50"></div>
+              
+              {/* Divisão proporcional */}
+              <div className="absolute inset-0 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-1000"
-                  style={{ width: `${ratio * 100}%` }}
+                  className={`absolute top-0 left-0 right-0 bg-gradient-to-br ${mood.color} transition-all duration-3000`}
+                  style={{ height: `${ratio * 100}%` }}
                 ></div>
               </div>
-              <div className="mt-2 text-sm text-gray-500">
-                {Math.round(ratio * 100)}% positivo
+              
+              {/* Centro com emoji */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-9xl">{mood.emoji}</div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Positive Section */}
-      <div className="relative py-32 px-8">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-green-950/20"></div>
-        
-        <div className="relative max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-              O que funcionou bem
-            </h2>
-            <div className="text-gray-400 text-xl">Nossas conquistas hoje</div>
           </div>
           
-          {/* Mensagem especial se só há positivos */}
-          {hasOnlyPositive && (
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center px-6 py-3 bg-green-900/30 border border-green-700/50 rounded-full">
-                <span className="text-2xl mr-2">🎉</span>
-                <span className="text-green-300 font-medium">Só positividade até agora! Nenhum desafio reportado.</span>
-              </div>
-            </div>
-          )}
+          {/* Texto principal */}
+          <h2 className="text-6xl font-light text-gray-200 mb-4">
+            {mood.text}
+          </h2>
+          <p className="text-2xl text-gray-400 mb-8">
+            {mood.status}
+          </p>
+          
+          {/* Percentual */}
+          <div className="w-96 h-3 bg-gray-800 rounded-full overflow-hidden mx-auto">
+            <div 
+              className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-3000"
+              style={{ width: `${ratio * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      </section>
+
+      {/* O que funcionou bem */}
+      <section className="min-h-screen py-16 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h3 className="text-5xl font-light bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-4">
+              O que funcionou bem
+            </h3>
+            <p className="text-2xl text-gray-400">Nossas conquistas hoje</p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CATEGORIES.map((category) => {
@@ -217,68 +231,46 @@ export default function PulsePage() {
               const maxCount = Math.max(...Object.values(stats?.positive || {}))
               const intensity = maxCount > 0 ? count / maxCount : 0
               
+              if (count === 0) return null
+              
               return (
-                <div
-                  key={category.id}
-                  className={`
-                    relative group cursor-pointer transform transition-all duration-500 hover:scale-105
-                    ${intensity > 0.6 ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-gray-900' : ''}
-                  `}
-                >
+                <div key={category.id} className="text-center">
                   <div className={`
-                    bg-gradient-to-br from-green-900/30 to-green-800/20 
-                    backdrop-blur-sm rounded-2xl p-8 border border-green-800/50
-                    ${intensity > 0.3 ? 'shadow-lg shadow-green-900/50' : ''}
+                    relative w-48 h-48 mx-auto rounded-3xl bg-gradient-to-br from-green-900/30 to-green-800/20 
+                    backdrop-blur-sm border-2 border-green-800/50 flex items-center justify-center
+                    ${intensity > 0.6 ? 'shadow-2xl shadow-green-900/50' : ''}
                   `}>
-                    <div className="text-4xl mb-4 text-center">{category.icon}</div>
-                    <div className="text-xl font-semibold text-green-300 text-center mb-2">
-                      {category.label}
-                    </div>
-                    
-                    {/* Visual Intensity Bar */}
-                    <div className="mt-4">
-                      <div className="h-2 bg-green-900/50 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-1000"
-                          style={{ width: `${intensity * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    {/* Count on hover */}
-                    <div className="mt-4 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="text-3xl font-bold text-green-400">{count}</div>
-                      <div className="text-sm text-green-300">menções</div>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-green-600/20 to-transparent"></div>
+                    <div className="text-6xl mb-2">{category.icon}</div>
+                  </div>
+                  
+                  {/* Barra de intensidade visual */}
+                  <div className="mt-6 w-48 h-2 bg-green-900/50 rounded-full overflow-hidden mx-auto">
+                    <div 
+                      className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-2000"
+                      style={{ width: `${intensity * 100}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="text-2xl font-medium text-green-300 mt-4">
+                    {category.label}
                   </div>
                 </div>
               )
             })}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Negative Section */}
-      <div className="relative py-32 px-8">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-950/20 to-transparent"></div>
-        
-        <div className="relative max-w-7xl mx-auto">
+      {/* O que não funcionou bem */}
+      <section className="min-h-screen py-16 px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+            <h3 className="text-5xl font-light bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-4">
               O que não funcionou bem
-            </h2>
-            <div className="text-gray-400 text-xl">Nossos desafios hoje</div>
+            </h3>
+            <p className="text-2xl text-gray-400">Nossos desafios hoje</p>
           </div>
-          
-          {/* Mensagem especial se só há negativos */}
-          {hasOnlyNegative && (
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center px-6 py-3 bg-red-900/30 border border-red-700/50 rounded-full">
-                <span className="text-2xl mr-2">🎯</span>
-                <span className="text-red-300 font-medium">Foco nos desafios hoje. Vamos transformar isso em oportunidades!</span>
-              </div>
-            </div>
-          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CATEGORIES.map((category) => {
@@ -286,143 +278,45 @@ export default function PulsePage() {
               const maxCount = Math.max(...Object.values(stats?.negative || {}))
               const intensity = maxCount > 0 ? count / maxCount : 0
               
+              if (count === 0) return null
+              
               return (
-                <div
-                  key={category.id}
-                  className={`
-                    relative group cursor-pointer transform transition-all duration-500 hover:scale-105
-                    ${intensity > 0.6 ? 'ring-2 ring-red-400 ring-offset-2 ring-offset-gray-900' : ''}
-                  `}
-                >
+                <div key={category.id} className="text-center">
                   <div className={`
-                    bg-gradient-to-br from-red-900/30 to-red-800/20 
-                    backdrop-blur-sm rounded-2xl p-8 border border-red-800/50
-                    ${intensity > 0.3 ? 'shadow-lg shadow-red-900/50' : ''}
+                    relative w-48 h-48 mx-auto rounded-3xl bg-gradient-to-br from-red-900/30 to-red-800/20 
+                    backdrop-blur-sm border-2 border-red-800/50 flex items-center justify-center
+                    ${intensity > 0.6 ? 'shadow-2xl shadow-red-900/50' : ''}
                   `}>
-                    <div className="text-4xl mb-4 text-center">{category.icon}</div>
-                    <div className="text-xl font-semibold text-red-300 text-center mb-2">
-                      {category.label}
-                    </div>
-                    
-                    {/* Visual Intensity Bar */}
-                    <div className="mt-4">
-                      <div className="h-2 bg-red-900/50 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-1000"
-                          style={{ width: `${intensity * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    {/* Count on hover */}
-                    <div className="mt-4 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="text-3xl font-bold text-red-400">{count}</div>
-                      <div className="text-sm text-red-300">menções</div>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-red-600/20 to-transparent"></div>
+                    <div className="text-6xl mb-2">{category.icon}</div>
+                  </div>
+                  
+                  {/* Barra de intensidade visual */}
+                  <div className="mt-6 w-48 h-2 bg-red-900/50 rounded-full overflow-hidden mx-auto">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-2000"
+                      style={{ width: `${intensity * 100}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="text-2xl font-medium text-red-300 mt-4">
+                    {category.label}
                   </div>
                 </div>
               )
             })}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Balance Visual */}
-      <div className="relative py-32 px-8">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-transparent"></div>
-        
-        <div className="relative max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-              Balanço do dia
-            </h2>
-            <div className="text-gray-400 text-xl">A história do nosso hoje</div>
-          </div>
-          
-          {/* Estado especial: Sem dados ou só um tipo */}
-          {hasNoData ? (
-            <div className="relative h-96 bg-gradient-to-r from-gray-950/20 to-gray-950/20 rounded-3xl backdrop-blur-sm border border-gray-800 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-4">📊</div>
-                <div className="text-2xl text-gray-400">
-                  Os gráficos aparecem quando chegarem os primeiros feedbacks
-                </div>
-              </div>
-            </div>
-          ) : hasOnlyPositive ? (
-            <div className="relative h-96 bg-gradient-to-r from-green-950/20 to-green-950/20 rounded-3xl backdrop-blur-sm border border-green-800/50 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-green-600/40 to-green-400/40"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-                    {totalPositive}
-                  </div>
-                  <div className="text-2xl text-green-300 mt-4">mensagens positivas</div>
-                </div>
-              </div>
-            </div>
-          ) : hasOnlyNegative ? (
-            <div className="relative h-96 bg-gradient-to-r from-red-950/20 to-red-950/20 rounded-3xl backdrop-blur-sm border border-red-800/50 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-red-600/40 to-red-400/40"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
-                    {totalNegative}
-                  </div>
-                  <div className="text-2xl text-red-300 mt-4">desafios identificados</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="relative h-96 bg-gradient-to-r from-green-950/20 to-red-950/20 rounded-3xl backdrop-blur-sm border border-gray-800 overflow-hidden">
-              <div className="absolute inset-0 flex">
-                <div 
-                  className="bg-gradient-to-b from-green-600/40 to-green-400/40 transition-all duration-1000"
-                  style={{ width: `${ratio * 100}%` }}
-                ></div>
-                <div 
-                  className="bg-gradient-to-b from-red-600/40 to-red-400/40 transition-all duration-1000"
-                  style={{ width: `${(1 - ratio) * 100}%` }}
-                ></div>
-              </div>
-              
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-8xl md:text-9xl font-bold">
-                    {ratio > 0.5 ? (
-                      <span className="bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-                        {totalPositive}
-                      </span>
-                    ) : (
-                      <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
-                        {totalNegative}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-2xl text-gray-400 mt-4">
-                    {ratio > 0.5 ? 'positivos' : 'desafios'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-8 flex justify-between text-gray-500">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-400">{totalPositive}</div>
-              <div>Positivos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-400">{stats?.total || 0}</div>
-              <div>Total</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-400">{totalNegative}</div>
-              <div>Desafios</div>
-            </div>
-          </div>
+      {/* Mensagem final */}
+      <footer className="min-h-screen flex items-center justify-center px-8">
+        <div className="text-center max-w-4xl">
+          <p className="text-4xl font-light text-gray-400 italic">
+            "{getReflectionMessage()}"
+          </p>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

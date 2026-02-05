@@ -102,22 +102,14 @@ function FeedbackPageContent() {
               : 'Seu feedback foi recebido e ajudará a melhorar nosso ambiente.'
             }
           </p>
-          <div className="space-y-3">
-            {!isTabletMode && (
-              <button
-                onClick={resetForm}
-                className="block w-full bg-positive text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
-              >
-                Nova Resposta
-              </button>
-            )}
+          {!isTabletMode && (
             <button
-              onClick={() => router.push('/pulse')}
-              className="block w-full bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+              onClick={resetForm}
+              className="block w-full bg-positive text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
             >
-              Ver Clima do Time
+              Nova Resposta
             </button>
-          </div>
+          )}
         </div>
       </div>
     )

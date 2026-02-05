@@ -63,14 +63,14 @@ export default function PulsePage() {
 
   if (loading && !stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center">
+      <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center overflow-hidden">
         <div className="text-center">
           <div className="animate-pulse flex space-x-3 justify-center mb-6">
             <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce"></div>
             <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             <div className="h-4 w-4 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
           </div>
-          <div className="text-2xl text-gray-400">Carregando clima do time...</div>
+          <div className="text-2xl text-gray-400">Carregando feedback do dia...</div>
         </div>
       </div>
     )
@@ -95,65 +95,26 @@ export default function PulsePage() {
     return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil', status: 'Dia difícil' }
   }
 
-  const getData = () => {
-    const date = new Date()
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      day: 'numeric', 
-      month: 'long' 
-    }
-    return date.toLocaleDateString('pt-BR', options)
-  }
-
-  const getReflectionMessage = () => {
-    if (hasNoData) return "O dia está começando e o tempo está aberto para novas histórias."
-    if (hasOnlyPositive) return "Hoje celebramos cada conquista. Amanhã construímos sobre esse sucesso."
-    if (hasOnlyNegative) return "Cada desafio hoje é uma oportunidade amanhã."
-    if (ratio > 0.7) return "Hoje florescemos em conjunto. Amanhã cultivamos mais."
-    if (ratio > 0.5) return "O equilíbrio de hoje fortalece o amanhã."
-    return "Aprendendo hoje para crescermos amanhã."
-  }
-
   // Estado especial: Sem dados ainda
   if (hasNoData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
+      <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
         {/* Cabeçalho */}
-        <header className="text-center py-6 px-8">
-          <h1 className="text-4xl font-light text-gray-300 mb-2">Clima do Time — Hoje</h1>
-          <p className="text-xl text-gray-500">{getData()}</p>
+        <header className="text-center py-4 px-8">
+          <h1 className="text-3xl font-light text-gray-300 mb-1">Feedback do Dia — Hoje</h1>
+          <p className="text-lg text-gray-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </header>
 
-        {/* Hero - Sem dados */}
-        <div className="h-screen flex items-center justify-center">
+        {/* Conteúdo único sem dados */}
+        <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
           <div className="text-center">
-            <div className="text-9xl mb-8 animate-pulse">⏳</div>
-            <h2 className="text-6xl font-light text-gray-300 mb-4">Aguardando feedbacks</h2>
-            <p className="text-2xl text-gray-500 max-w-3xl mx-auto mb-12">
+            <div className="text-8xl mb-8 animate-pulse">⏳</div>
+            <h2 className="text-5xl font-light text-gray-300 mb-4">Aguardando feedbacks</h2>
+            <p className="text-xl text-gray-500 max-w-3xl mx-auto">
               O espaço está pronto para as primeiras impressões do dia
             </p>
-            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div className="h-full w-1/2 bg-gradient-to-r from-gray-600 to-gray-400 animate-pulse"></div>
-            </div>
           </div>
         </div>
-
-        {/* Seções vazias */}
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-8xl mb-6">📊</div>
-            <p className="text-3xl text-gray-400">O clima do time aparece aqui</p>
-          </div>
-        </div>
-
-        {/* Mensagem final */}
-        <footer className="min-h-screen flex items-center justify-center">
-          <div className="text-center max-w-4xl">
-            <p className="text-4xl font-light text-gray-400 italic">
-              "O tempo está aberto. Cada feedback constrói nossa história."
-            </p>
-          </div>
-        </footer>
       </div>
     )
   }
@@ -161,162 +122,137 @@ export default function PulsePage() {
   const mood = getDayMood()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
+    <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
       {/* Cabeçalho discreto */}
-      <header className="text-center py-6 px-8">
-        <h1 className="text-4xl font-light text-gray-300 mb-2">Clima do Time — Hoje</h1>
-        <p className="text-xl text-gray-500">{getData()}</p>
+      <header className="text-center py-4 px-8">
+        <h1 className="text-3xl font-light text-gray-300 mb-1">Feedback do Dia — Hoje</h1>
+        <p className="text-lg text-gray-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         <div className="flex items-center justify-center mt-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
           <span className="text-sm text-gray-600">tempo real</span>
         </div>
       </header>
 
-      {/* Hero Visual Principal */}
-      <section className="min-h-screen flex items-center justify-center px-8">
-        <div className="text-center max-w-6xl mx-auto">
-          {/* Indicador visual principal */}
-          <div className="relative mb-12">
-            {/* Balanço visual gigante */}
-            <div className="w-96 h-96 mx-auto relative">
-              {/* Círculo de fundo */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50"></div>
-              
-              {/* Divisão proporcional */}
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                <div 
-                  className={`absolute top-0 left-0 right-0 bg-gradient-to-br ${mood.color} transition-all duration-3000`}
-                  style={{ height: `${ratio * 100}%` }}
-                ></div>
-              </div>
-              
-              {/* Centro com emoji */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-9xl">{mood.emoji}</div>
+      {/* Painel único com grid */}
+      <div className="h-[calc(100vh-8rem)] px-8 grid grid-rows-[1fr_1fr_1fr] gap-6">
+        
+        {/* Hero - Balanço Principal */}
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            {/* Indicador visual principal */}
+            <div className="relative mb-8">
+              {/* Balanço visual */}
+              <div className="w-64 h-64 mx-auto relative">
+                {/* Círculo de fundo */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50"></div>
+                
+                {/* Divisão proporcional */}
+                <div className="absolute inset-0 rounded-full overflow-hidden">
+                  <div 
+                    className={`absolute top-0 left-0 right-0 bg-gradient-to-br ${mood.color} transition-all duration-3000`}
+                    style={{ height: `${ratio * 100}%` }}
+                  ></div>
+                </div>
+                
+                {/* Centro com emoji */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-7xl">{mood.emoji}</div>
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Texto principal */}
-          <h2 className="text-6xl font-light text-gray-200 mb-4">
-            {mood.text}
-          </h2>
-          <p className="text-2xl text-gray-400 mb-8">
-            {mood.status}
-          </p>
-          
-          {/* Percentual */}
-          <div className="w-96 h-3 bg-gray-800 rounded-full overflow-hidden mx-auto">
-            <div 
-              className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-3000"
-              style={{ width: `${ratio * 100}%` }}
-            ></div>
+            
+            {/* Texto principal */}
+            <h2 className="text-5xl font-light text-gray-200 mb-2">
+              {mood.text}
+            </h2>
+            <p className="text-xl text-gray-400 mb-4">
+              {mood.status}
+            </p>
+            
+            {/* Percentual */}
+            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-3000"
+                style={{ width: `${ratio * 100}%` }}
+              ></div>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* O que funcionou bem */}
-      <section className="min-h-screen py-16 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h3 className="text-5xl font-light bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-4">
-              O que funcionou bem
-            </h3>
-            <p className="text-2xl text-gray-400">Nossas conquistas hoje</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {CATEGORIES.map((category) => {
-              const count = stats?.positive[category.label] || 0
-              const maxCount = Math.max(...Object.values(stats?.positive || {}))
-              const intensity = maxCount > 0 ? count / maxCount : 0
-              
-              if (count === 0) return null
-              
-              return (
-                <div key={category.id} className="text-center">
-                  <div className={`
-                    relative w-48 h-48 mx-auto rounded-3xl bg-gradient-to-br from-green-900/30 to-green-800/20 
-                    backdrop-blur-sm border-2 border-green-800/50 flex items-center justify-center
-                    ${intensity > 0.6 ? 'shadow-2xl shadow-green-900/50' : ''}
-                  `}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-green-600/20 to-transparent"></div>
-                    <div className="text-6xl mb-2">{category.icon}</div>
+        {/* O que funcionou bem */}
+        <div className="flex items-center">
+          <div className="w-full">
+            <div className="text-center mb-6">
+              <h3 className="text-4xl font-light bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-2">
+                O que funcionou bem
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 justify-items-center">
+              {CATEGORIES.map((category) => {
+                const count = stats?.positive[category.label] || 0
+                const maxCount = Math.max(...Object.values(stats?.positive || {}))
+                const intensity = maxCount > 0 ? count / maxCount : 0
+                
+                if (count === 0) return null
+                
+                return (
+                  <div key={category.id} className="text-center">
+                    <div className={`
+                      relative w-16 h-16 rounded-2xl bg-gradient-to-br from-green-900/30 to-green-800/20 
+                      border border-green-800/50 flex items-center justify-center
+                      ${intensity > 0.6 ? 'shadow-xl shadow-green-900/50' : ''}
+                    `}>
+                      <div className="text-2xl">{category.icon}</div>
+                    </div>
+                    
+                    <div className="text-sm font-medium text-green-300 mt-2">
+                      {category.label}
+                    </div>
                   </div>
-                  
-                  {/* Barra de intensidade visual */}
-                  <div className="mt-6 w-48 h-2 bg-green-900/50 rounded-full overflow-hidden mx-auto">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-2000"
-                      style={{ width: `${intensity * 100}%` }}
-                    ></div>
-                  </div>
-                  
-                  <div className="text-2xl font-medium text-green-300 mt-4">
-                    {category.label}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* O que não funcionou bem */}
-      <section className="min-h-screen py-16 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h3 className="text-5xl font-light bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-4">
-              O que não funcionou bem
-            </h3>
-            <p className="text-2xl text-gray-400">Nossos desafios hoje</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {CATEGORIES.map((category) => {
-              const count = stats?.negative[category.label] || 0
-              const maxCount = Math.max(...Object.values(stats?.negative || {}))
-              const intensity = maxCount > 0 ? count / maxCount : 0
-              
-              if (count === 0) return null
-              
-              return (
-                <div key={category.id} className="text-center">
-                  <div className={`
-                    relative w-48 h-48 mx-auto rounded-3xl bg-gradient-to-br from-red-900/30 to-red-800/20 
-                    backdrop-blur-sm border-2 border-red-800/50 flex items-center justify-center
-                    ${intensity > 0.6 ? 'shadow-2xl shadow-red-900/50' : ''}
-                  `}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-red-600/20 to-transparent"></div>
-                    <div className="text-6xl mb-2">{category.icon}</div>
+        {/* O que não funcionou bem */}
+        <div className="flex items-center">
+          <div className="w-full">
+            <div className="text-center mb-6">
+              <h3 className="text-4xl font-light bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-2">
+                O que não funcionou bem
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 justify-items-center">
+              {CATEGORIES.map((category) => {
+                const count = stats?.negative[category.label] || 0
+                const maxCount = Math.max(...Object.values(stats?.negative || {}))
+                const intensity = maxCount > 0 ? count / maxCount : 0
+                
+                if (count === 0) return null
+                
+                return (
+                  <div key={category.id} className="text-center">
+                    <div className={`
+                      relative w-16 h-16 rounded-2xl bg-gradient-to-br from-red-900/30 to-red-800/20 
+                      border border-red-800/50 flex items-center justify-center
+                      ${intensity > 0.6 ? 'shadow-xl shadow-red-900/50' : ''}
+                    `}>
+                      <div className="text-2xl">{category.icon}</div>
+                    </div>
+                    
+                    <div className="text-sm font-medium text-red-300 mt-2">
+                      {category.label}
+                    </div>
                   </div>
-                  
-                  {/* Barra de intensidade visual */}
-                  <div className="mt-6 w-48 h-2 bg-red-900/50 rounded-full overflow-hidden mx-auto">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-2000"
-                      style={{ width: `${intensity * 100}%` }}
-                    ></div>
-                  </div>
-                  
-                  <div className="text-2xl font-medium text-red-300 mt-4">
-                    {category.label}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Mensagem final */}
-      <footer className="min-h-screen flex items-center justify-center px-8">
-        <div className="text-center max-w-4xl">
-          <p className="text-4xl font-light text-gray-400 italic">
-            "{getReflectionMessage()}"
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }

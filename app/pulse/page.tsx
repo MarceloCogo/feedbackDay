@@ -28,6 +28,18 @@ export default function PulsePage() {
   const [loading, setLoading] = useState(true)
   const [transitioning, setTransitioning] = useState(false)
 
+  // Função para limpar todos os dados
+  const clearAllData = async () => {
+    if (confirm('Tem certeza que deseja zerar todos os dados?')) {
+      try {
+        await fetch('/api/feedback/clear', { method: 'POST' })
+        window.location.reload()
+      } catch (error) {
+        console.error('Error clearing data:', error)
+      }
+    }
+  }
+
   // Função para formatar data
   const formatDateForDisplay = (date: Date) => {
     const today = new Date()
@@ -219,6 +231,14 @@ export default function PulsePage() {
             </div>
           </div>
         </div>
+
+        {/* Botão para limpar dados */}
+        <button
+          onClick={clearAllData}
+          className="absolute bottom-4 right-4 px-4 py-2 bg-red-900/50 hover:bg-red-800 text-red-400 text-sm rounded-lg transition-colors border border-red-800"
+        >
+          🗑️ Zerar dados
+        </button>
       </div>
     )
   }
@@ -381,6 +401,14 @@ export default function PulsePage() {
             </div>
           </div>
         </div>
+
+        {/* Botão para limpar dados */}
+        <button
+          onClick={clearAllData}
+          className="absolute bottom-4 right-4 px-4 py-2 bg-red-900/50 hover:bg-red-800 text-red-400 text-sm rounded-lg transition-colors border border-red-800"
+        >
+          🗑️ Zerar dados
+        </button>
       </div>
     </div>
   )

@@ -144,3 +144,8 @@ export async function getFeedbackStatsByDate(dateStr: string) {
   
   return stats
 }
+
+export async function clearAllFeedback() {
+  await redis.del(FEEDBACKS_KEY)
+  await redis.del(NEXT_ID_KEY)
+}

@@ -1,10 +1,17 @@
 import { Redis } from '@upstash/redis'
 
-// Inicializar cliente Redis
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-})
+// Verificar se Redis está configurado
+const hasRedisConfig = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+
+// Inicializar cliente Redis apenas se configurado
+let redis: Redis | null = null
+
+if (hasRedisConfig) {
+  redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
+}
 
 interface FeedbackData {
   id: number
@@ -13,6 +20,12 @@ interface FeedbackData {
   date: string
   source: string
   createdAt: number
+}
+
+// Fallback em memória para desenvolvimento local
+const memoryStore: { feedbacks: FeedbackData[]; nextId: number } = {
+  feedbacks: [],
+  nextId: 1
 }
 
 const FEEDBACKS_KEY = 'feedbacks'
@@ -26,46 +39,66 @@ export interface FeedbackInput {
 }
 
 export async function saveFeedback(data: FeedbackInput): Promise<number> {
-  // Buscar próximo ID
-  let nextId = await redis.get<number>(NEXT_ID_KEY)
-  if (!nextId) {
-    nextId = 1
+  // Se não tem Redis configurado, usar memória
+  if (!redis) {
+    const feedback: FeedbackData = {
+      id: memoryStore.nextId++,
+      positive: data.positive,
+      negative: data.negative,
+      date: data.date,
+      source: data.source,
+      createdAt: Date.now()
+    }
+    memoryStore.feedbacks.push(feedback)
+    console.log('[Memory] Saved feedback:', feedback.id)
+    return feedback.id
   }
-  
-  const feedback: FeedbackData = {
-    id: nextId,
-    positive: data.positive,
-    negative: data.negative,
-    date: data.date,
-    source: data.source,
-    createdAt: Date.now()
+
+  // Com Redis
+  try {
+    let nextId = await redis.get<number>(NEXT_ID_KEY)
+    if (!nextId) {
+      nextId = 1
+    }
+    
+    const feedback: FeedbackData = {
+      id: nextId,
+      positive: data.positive,
+      negative: data.negative,
+      date: data.date,
+      source: data.source,
+      createdAt: Date.now()
+    }
+    
+    const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+    feedbacks.push(feedback)
+    
+    await redis.set(FEEDBACKS_KEY, feedbacks)
+    await redis.set(NEXT_ID_KEY, nextId + 1)
+    
+    return nextId
+  } catch (error) {
+    console.error('[Redis] Error saving feedback:', error)
+    throw error
   }
-  
-  // Buscar feedbacks existentes
-  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
-  feedbacks.push(feedback)
-  
-  // Salvar feedbacks e próximo ID
-  await redis.set(FEEDBACKS_KEY, feedbacks)
-  await redis.set(NEXT_ID_KEY, nextId + 1)
-  
-  return nextId
 }
 
 export async function getAllFeedback(): Promise<FeedbackData[]> {
-  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
-  return feedbacks.sort((a: FeedbackData, b: FeedbackData) => b.createdAt - a.createdAt)
-}
+  if (!redis) {
+    return [...memoryStore.feedbacks].sort((a, b) => b.createdAt - a.createdAt)
+  }
 
-export async function getFeedbackByDate(dateStr: string): Promise<FeedbackData[]> {
-  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
-  return feedbacks
-    .filter((f: FeedbackData) => f.date.startsWith(dateStr))
-    .sort((a: FeedbackData, b: FeedbackData) => b.createdAt - a.createdAt)
+  try {
+    const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+    return feedbacks.sort((a: FeedbackData, b: FeedbackData) => b.createdAt - a.createdAt)
+  } catch (error) {
+    console.error('[Redis] Error getting feedbacks:', error)
+    return [...memoryStore.feedbacks]
+  }
 }
 
 export async function getFeedbackStats() {
-  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  const feedbacks = await getAllFeedback()
   
   const stats = {
     total: feedbacks.length,
@@ -105,7 +138,7 @@ export async function getFeedbackStats() {
 }
 
 export async function getFeedbackStatsByDate(dateStr: string) {
-  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  const feedbacks = await getAllFeedback()
   const dayFeedback = feedbacks.filter((f: FeedbackData) => f.date.startsWith(dateStr))
   
   const stats = {

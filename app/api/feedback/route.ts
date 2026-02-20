@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       source
     }
     
-    const id = saveFeedback(feedbackData)
+    const id = await saveFeedback(feedbackData)
     
     return NextResponse.json(
       { success: true, id },

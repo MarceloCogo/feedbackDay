@@ -11,11 +11,11 @@ export async function GET(request: Request) {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       start(controller) {
-        const sendStats = () => {
+        const sendStats = async () => {
           try {
             const stats = date 
-              ? getFeedbackStatsByDate(date)
-              : getFeedbackStats()
+              ? await getFeedbackStatsByDate(date)
+              : await getFeedbackStats()
             const data = `data: ${JSON.stringify(stats)}\n\n`
             controller.enqueue(encoder.encode(data))
           } catch (error) {
@@ -51,8 +51,8 @@ export async function GET(request: Request) {
   // Endpoint JSON normal
   try {
     const stats = date 
-      ? getFeedbackStatsByDate(date)
-      : getFeedbackStats()
+      ? await getFeedbackStatsByDate(date)
+      : await getFeedbackStats()
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching stats:', error)

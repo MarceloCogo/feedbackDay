@@ -1,5 +1,10 @@
-// Banco de dados em memória - funciona em ambiente serverless
-// Os dados persistem durante a execução da função (até cold start)
+import { Redis } from '@upstash/redis'
+
+// Inicializar cliente Redis
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+})
 
 interface FeedbackData {
   id: number
@@ -10,19 +15,8 @@ interface FeedbackData {
   createdAt: number
 }
 
-// Armazenamento em memória (global para persistir entre requisições)
-const globalStore = global as unknown as {
-  feedbackStore: FeedbackData[]
-  nextId: number
-}
-
-if (!globalStore.feedbackStore) {
-  globalStore.feedbackStore = []
-  globalStore.nextId = 1
-}
-
-const feedbackStore = globalStore.feedbackStore
-const nextId = globalStore.nextId
+const FEEDBACKS_KEY = 'feedbacks'
+const NEXT_ID_KEY = 'nextId'
 
 export interface FeedbackInput {
   positive: string[]
@@ -31,35 +25,50 @@ export interface FeedbackInput {
   source: string
 }
 
-export function saveFeedback(data: FeedbackInput): number {
-  const id = nextId
-  globalStore.nextId++
+export async function saveFeedback(data: FeedbackInput): Promise<number> {
+  // Buscar próximo ID
+  let nextId = await redis.get<number>(NEXT_ID_KEY)
+  if (!nextId) {
+    nextId = 1
+  }
   
-  feedbackStore.push({
-    id,
+  const feedback: FeedbackData = {
+    id: nextId,
     positive: data.positive,
     negative: data.negative,
     date: data.date,
     source: data.source,
     createdAt: Date.now()
-  })
+  }
   
-  return id
+  // Buscar feedbacks existentes
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  feedbacks.push(feedback)
+  
+  // Salvar feedbacks e próximo ID
+  await redis.set(FEEDBACKS_KEY, feedbacks)
+  await redis.set(NEXT_ID_KEY, nextId + 1)
+  
+  return nextId
 }
 
-export function getAllFeedback(): FeedbackData[] {
-  return [...feedbackStore].sort((a, b) => b.createdAt - a.createdAt)
+export async function getAllFeedback(): Promise<FeedbackData[]> {
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  return feedbacks.sort((a: FeedbackData, b: FeedbackData) => b.createdAt - a.createdAt)
 }
 
-export function getFeedbackByDate(dateStr: string): FeedbackData[] {
-  return feedbackStore
-    .filter(f => f.date.startsWith(dateStr))
-    .sort((a, b) => b.createdAt - a.createdAt)
+export async function getFeedbackByDate(dateStr: string): Promise<FeedbackData[]> {
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  return feedbacks
+    .filter((f: FeedbackData) => f.date.startsWith(dateStr))
+    .sort((a: FeedbackData, b: FeedbackData) => b.createdAt - a.createdAt)
 }
 
-export function getFeedbackStats() {
+export async function getFeedbackStats() {
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  
   const stats = {
-    total: feedbackStore.length,
+    total: feedbacks.length,
     positive: {} as Record<string, number>,
     negative: {} as Record<string, number>
   }
@@ -79,7 +88,7 @@ export function getFeedbackStats() {
     stats.negative[cat] = 0
   })
   
-  feedbackStore.forEach(feedback => {
+  feedbacks.forEach((feedback: FeedbackData) => {
     feedback.positive.forEach((cat: string) => {
       if (stats.positive[cat] !== undefined) {
         stats.positive[cat]++
@@ -95,8 +104,9 @@ export function getFeedbackStats() {
   return stats
 }
 
-export function getFeedbackStatsByDate(dateStr: string) {
-  const dayFeedback = feedbackStore.filter(f => f.date.startsWith(dateStr))
+export async function getFeedbackStatsByDate(dateStr: string) {
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+  const dayFeedback = feedbacks.filter((f: FeedbackData) => f.date.startsWith(dateStr))
   
   const stats = {
     total: dayFeedback.length,
@@ -119,7 +129,7 @@ export function getFeedbackStatsByDate(dateStr: string) {
     stats.negative[cat] = 0
   })
   
-  dayFeedback.forEach(feedback => {
+  dayFeedback.forEach((feedback: FeedbackData) => {
     feedback.positive.forEach((cat: string) => {
       if (stats.positive[cat] !== undefined) {
         stats.positive[cat]++

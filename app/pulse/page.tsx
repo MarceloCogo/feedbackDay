@@ -200,7 +200,7 @@ export default function PulsePage() {
       </div>
 
       {/* Conteúdo principal */}
-      <div className={`h-[calc(100vh-4rem)] px-6 py-4 grid gap-4 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
+      <div className={`h-[calc(100vh-4rem)] px-4 py-2 grid grid-rows-[auto_1_auto] gap-2 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
         
         {/* Linha 1: Emoji do clima (menor) + Status */}
         <div className="flex items-center justify-center gap-6">
@@ -214,60 +214,60 @@ export default function PulsePage() {
         </div>
 
         {/* Linha 2: Categorias Positive e Negative */}
-        <div className="flex-1 grid grid-cols-2 gap-8 min-h-0">
+        <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
           
           {/* Positive - Verde */}
-          <div className="flex flex-col">
-            <h3 className="text-2xl font-light text-green-400 text-center mb-4">O que funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-3 content-start overflow-auto">
+          <div className="flex flex-col min-h-0">
+            <h3 className="text-2xl font-light text-green-400 text-center mb-3">O que funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-2 content-center">
               {sortedPositiveCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (
                   <div 
                     key={category.id}
                     className={`
-                      relative rounded-xl p-3 flex flex-col items-center justify-center
+                      relative rounded-lg p-2 flex flex-col items-center justify-center aspect-square
                       ${isTop ? 'bg-green-900/40 border-2 border-green-500/50 shadow-lg shadow-green-900/30' : 'bg-green-900/20 border border-green-800/30'}
                     `}
                   >
-                    <div className="text-3xl mb-1">{category.icon}</div>
+                    <div className="text-2xl mb-1">{category.icon}</div>
                     <div className="text-xs text-green-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-green-950">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-green-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedPositiveCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600 py-8">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
               )}
             </div>
           </div>
 
           {/* Negative - Vermelho */}
-          <div className="flex flex-col">
-            <h3 className="text-2xl font-light text-red-400 text-center mb-4">O que não funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-3 content-start overflow-auto">
+          <div className="flex flex-col min-h-0">
+            <h3 className="text-2xl font-light text-red-400 text-center mb-3">O que não funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-2 content-center">
               {sortedNegativeCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (
                   <div 
                     key={category.id}
                     className={`
-                      relative rounded-xl p-3 flex flex-col items-center justify-center
+                      relative rounded-lg p-2 flex flex-col items-center justify-center aspect-square
                       ${isTop ? 'bg-red-900/40 border-2 border-red-500/50 shadow-lg shadow-red-900/30' : 'bg-red-900/20 border border-red-800/30'}
                     `}
                   >
-                    <div className="text-3xl mb-1">{category.icon}</div>
+                    <div className="text-2xl mb-1">{category.icon}</div>
                     <div className="text-xs text-red-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-red-950">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-red-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedNegativeCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600 py-8">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
               )}
             </div>
           </div>

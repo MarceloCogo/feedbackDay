@@ -8,11 +8,6 @@ interface StatsData {
   negative: Record<string, number>
 }
 
-interface DayStats {
-  date: string
-  data: StatsData | null
-}
-
 const CATEGORIES = [
   { id: 'dinamica', label: 'Dinâmica do dia', icon: '📅' },
   { id: 'reunioes', label: 'Reuniões', icon: '👥' },
@@ -24,23 +19,10 @@ const CATEGORIES = [
 
 export default function PulsePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [dayStats, setDayStats] = useState<DayStats | null>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [transitioning, setTransitioning] = useState(false)
 
-  // Função para limpar todos os dados
-  const clearAllData = async () => {
-    if (confirm('Tem certeza que deseja zerar todos os dados?')) {
-      try {
-        await fetch('/api/feedback/clear', { method: 'POST' })
-        window.location.reload()
-      } catch (error) {
-        console.error('Error clearing data:', error)
-      }
-    }
-  }
-
-  // Função para formatar data
   const formatDateForDisplay = (date: Date) => {
     const today = new Date()
     const yesterday = new Date(today)
@@ -55,49 +37,33 @@ export default function PulsePage() {
     }
   }
 
-  // Função para buscar dados de uma data específica
-  const fetchDayStats = async (date: Date) => {
+  const fetchStats = async (date: Date) => {
     try {
       setLoading(true)
-      const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
-      
-      // Para MVP, vamos simular dados por dia
-      // Em produção, isso buscaria no banco de dados por data
-      const response = await fetch('/api/stats')
+      const dateStr = date.toISOString().split('T')[0]
+      const response = await fetch(`/api/stats?date=${dateStr}`)
       if (response.ok) {
-        const allStats = await response.json()
-        
-        // Simulação: filtrar por data (no MVP, retorna dados do dia atual)
-        // Futuro: implementar filtro real no backend
-        setDayStats({
-          date: dateStr,
-          data: allStats
-        })
+        const data = await response.json()
+        setStats(data)
       }
     } catch (error) {
-      console.error('Error fetching day stats:', error)
-      setDayStats({
-        date: date.toISOString().split('T')[0],
-        data: null
-      })
+      console.error('Error fetching stats:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  // Navegar para dia anterior
   const goToPreviousDay = () => {
     setTransitioning(true)
     setTimeout(() => {
       const newDate = new Date(selectedDate)
       newDate.setDate(newDate.getDate() - 1)
       setSelectedDate(newDate)
-      fetchDayStats(newDate)
-      setTimeout(() => setTransitioning(false), 500)
-    }, 200)
+      fetchStats(newDate)
+      setTimeout(() => setTransitioning(false), 300)
+    }, 150)
   }
 
-  // Navegar para dia seguinte
   const goToNextDay = () => {
     const today = new Date()
     if (selectedDate < today) {
@@ -106,43 +72,41 @@ export default function PulsePage() {
         const newDate = new Date(selectedDate)
         newDate.setDate(newDate.getDate() + 1)
         setSelectedDate(newDate)
-        fetchDayStats(newDate)
-        setTimeout(() => setTransitioning(false), 500)
-      }, 200)
+        fetchStats(newDate)
+        setTimeout(() => setTransitioning(false), 300)
+      }, 150)
+    }
+  }
+
+  const clearAllData = async () => {
+    if (confirm('Tem certeza que deseja zerar todos os dados?')) {
+      try {
+        await fetch('/api/feedback/clear', { method: 'POST' })
+        window.location.reload()
+      } catch (error) {
+        console.error('Error clearing data:', error)
+      }
     }
   }
 
   useEffect(() => {
-    fetchDayStats(selectedDate)
+    fetchStats(selectedDate)
     
-    // Conexão SSE para tempo real (só quando for hoje)
     const today = new Date()
     if (selectedDate.toDateString() === today.toDateString()) {
       const eventSource = new EventSource('/api/stats?stream=true')
-      
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
-          setDayStats({
-            date: selectedDate.toISOString().split('T')[0],
-            data
-          })
+          setStats(data)
         } catch (error) {
           console.error('Error parsing SSE data:', error)
         }
       }
-
-      eventSource.onerror = () => {
-        eventSource.close()
-      }
-
-      return () => {
-        eventSource.close()
-      }
+      return () => eventSource.close()
     }
   }, [selectedDate])
 
-  const stats = dayStats?.data
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
   if (loading && !stats) {
@@ -164,251 +128,162 @@ export default function PulsePage() {
   const totalNegative = Object.values(stats?.negative || {}).reduce((sum, count) => sum + count, 0)
   const total = totalPositive + totalNegative
   const hasNoData = total === 0
-  const hasOnlyPositive = totalPositive > 0 && totalNegative === 0
-  const hasOnlyNegative = totalNegative > 0 && totalPositive === 0
   const ratio = total > 0 ? totalPositive / total : 0.5
-  
+
   const getDayMood = () => {
-    if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando', status: 'Sem dados' }
-    if (hasOnlyPositive) return { emoji: '🎉', color: 'from-green-500 to-green-300', text: 'Excelente', status: 'Só positividade' }
-    if (hasOnlyNegative) return { emoji: '🎯', color: 'from-red-500 to-red-300', text: 'Foco em desafios', status: 'Só desafios' }
-    if (ratio > 0.7) return { emoji: '🌟', color: 'from-green-600 to-green-400', text: 'Excelente', status: 'Dia muito positivo' }
-    if (ratio > 0.6) return { emoji: '✨', color: 'from-green-500 to-green-300', text: 'Bom', status: 'Dia positivo' }
-    if (ratio > 0.4) return { emoji: '⚖️', color: 'from-yellow-500 to-yellow-300', text: 'Equilibrado', status: 'Dia equilibrado' }
-    if (ratio > 0.3) return { emoji: '🌗', color: 'from-orange-500 to-orange-300', text: 'Desafiador', status: 'Dia desafiador' }
-    return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil', status: 'Dia difícil' }
+    if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando' }
+    if (ratio > 0.7) return { emoji: '🌟', color: 'from-green-600 to-green-400', text: 'Excelente' }
+    if (ratio > 0.5) return { emoji: '✨', color: 'from-green-500 to-green-300', text: 'Bom' }
+    if (ratio > 0.4) return { emoji: '⚖️', color: 'from-yellow-500 to-yellow-300', text: 'Equilibrado' }
+    if (ratio > 0.3) return { emoji: '🌗', color: 'from-orange-500 to-orange-300', text: 'Desafiador' }
+    return { emoji: '🌑', color: 'from-red-600 to-red-400', text: 'Difícil' }
   }
 
-  // Estado especial: Sem dados ainda
+  // Ordenar categorias por quantidade (maior para menor)
+  const sortedPositiveCategories = CATEGORIES
+    .map(cat => ({ ...cat, count: stats?.positive[cat.label] || 0 }))
+    .filter(c => c.count > 0)
+    .sort((a, b) => b.count - a.count)
+
+  const sortedNegativeCategories = CATEGORIES
+    .map(cat => ({ ...cat, count: stats?.negative[cat.label] || 0 }))
+    .filter(c => c.count > 0)
+    .sort((a, b) => b.count - a.count)
+
+  const mood = getDayMood()
+
   if (hasNoData) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
-        {/* Filtro de data no canto superior esquerdo */}
-        <div className="absolute top-4 left-4 z-10">
-          <div className="flex items-center space-x-2 bg-gray-900/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
-            <button
-              onClick={goToPreviousDay}
-              className="text-gray-400 hover:text-gray-200 transition-colors"
-            >
-              ◀
-            </button>
-            <span className="text-gray-200 font-medium min-w-[60px] text-center">
-              {formatDateForDisplay(selectedDate)}
-            </span>
-            <button
-              onClick={goToNextDay}
-              disabled={selectedDate >= new Date()}
-              className={`${selectedDate >= new Date() ? 'text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:text-gray-200'} transition-colors`}
-            >
-              ▶
-            </button>
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-6 py-3 bg-gray-900/50">
+          <div className="flex items-center space-x-3 bg-gray-800 rounded-lg px-3 py-2">
+            <button onClick={goToPreviousDay} className="text-gray-400 hover:text-gray-200 text-lg">◀</button>
+            <span className="text-gray-200 font-medium min-w-[70px] text-center">{formatDateForDisplay(selectedDate)}</span>
+            <button onClick={goToNextDay} disabled={isToday} className={`text-lg ${isToday ? 'text-gray-700' : 'text-gray-400 hover:text-gray-200'}`}>▶</button>
           </div>
+          
+          <h1 className="text-2xl font-light text-gray-300">Feedback do Dia</h1>
+          
+          {isToday && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
+          <button onClick={clearAllData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
         </div>
 
-        {/* Cabeçalho alinhado */}
-        <header className="text-center py-4 px-8">
-          <h1 className="text-3xl font-light text-gray-300 mb-1">
-            Feedback do Dia — {formatDateForDisplay(selectedDate)}
-          </h1>
-          {isToday && (
-            <div className="flex items-center justify-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-              <span className="text-sm text-gray-600">tempo real</span>
-            </div>
-          )}
-        </header>
-
-        {/* Conteúdo único sem dados */}
-        <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
+        {/* Centro */}
+        <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
           <div className="text-center">
-            <div className="text-8xl mb-8 animate-pulse">⏳</div>
-            <h2 className="text-5xl font-light text-gray-300 mb-4">Aguardando feedbacks</h2>
-            <p className="text-2xl text-gray-500 max-w-3xl mx-auto mb-12">
-              O espaço está pronto para as primeiras impressões do dia
-            </p>
-            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div className="h-full w-1/2 bg-gradient-to-r from-gray-600 to-gray-400 animate-pulse"></div>
-            </div>
+            <div className="text-7xl mb-6 animate-pulse">⏳</div>
+            <h2 className="text-4xl font-light text-gray-300 mb-3">Aguardando feedbacks</h2>
+            <p className="text-xl text-gray-500">O espaço está pronto para as primeiras impressões</p>
           </div>
         </div>
-
-        {/* Botão para limpar dados */}
-        <button
-          onClick={clearAllData}
-          className="absolute bottom-4 right-4 px-4 py-2 bg-red-900/50 hover:bg-red-800 text-red-400 text-sm rounded-lg transition-colors border border-red-800"
-        >
-          🗑️ Zerar dados
-        </button>
       </div>
     )
   }
 
-  const mood = getDayMood()
-
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-hidden">
-      {/* Filtro de data no canto superior esquerdo */}
-      <div className="absolute top-4 left-4 z-10">
-        <div className="flex items-center space-x-2 bg-gray-900/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
-          <button
-            onClick={goToPreviousDay}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
-          >
-            ◀
-          </button>
-          <span className="text-gray-200 font-medium min-w-[60px] text-center">
-            {formatDateForDisplay(selectedDate)}
-          </span>
-          <button
-            onClick={goToNextDay}
-            disabled={selectedDate >= new Date()}
-            className={`${selectedDate >= new Date() ? 'text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:text-gray-200'} transition-colors`}
-          >
-            ▶
-          </button>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-3 bg-gray-900/50">
+        <div className="flex items-center space-x-3 bg-gray-800 rounded-lg px-3 py-2">
+          <button onClick={goToPreviousDay} className="text-gray-400 hover:text-gray-200 text-lg">◀</button>
+          <span className="text-gray-200 font-medium min-w-[70px] text-center">{formatDateForDisplay(selectedDate)}</span>
+          <button onClick={goToNextDay} disabled={isToday} className={`text-lg ${isToday ? 'text-gray-700' : 'text-gray-400 hover:text-gray-200'}`}>▶</button>
+        </div>
+        
+        <h1 className="text-2xl font-light text-gray-300">Feedback do Dia</h1>
+        
+        <div className="flex items-center gap-4">
+          {isToday && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
+          <button onClick={clearAllData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
         </div>
       </div>
 
-      {/* Cabeçalho alinhado com filtro */}
-      <header className="text-center py-4 px-8">
-        <h1 className="text-3xl font-light text-gray-300 mb-1">
-          Feedback do Dia — {formatDateForDisplay(selectedDate)}
-        </h1>
-        {isToday && (
-          <div className="flex items-center justify-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-            <span className="text-sm text-gray-600">tempo real</span>
-          </div>
-        )}
-      </header>
-
-      {/* Painel principal com transição */}
-      <div className={`h-[calc(100vh-8rem)] px-8 grid grid-rows-[1fr_1fr_1fr] gap-6 transition-opacity duration-500 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
+      {/* Conteúdo principal */}
+      <div className={`h-[calc(100vh-4rem)] px-6 py-4 grid gap-4 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
         
-        {/* Hero - Balanço Principal */}
-        <div className="flex items-center justify-center">
-          <div className="text-center">
-            {/* Indicador visual principal */}
-            <div className="relative mb-8">
-              {/* Balanço visual */}
-              <div className="w-64 h-64 mx-auto relative">
-                {/* Círculo de fundo */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50"></div>
-                
-                {/* Divisão proporcional */}
-                <div className="absolute inset-0 rounded-full overflow-hidden">
+        {/* Linha 1: Emoji do clima (menor) + Status */}
+        <div className="flex items-center justify-center gap-6">
+          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
+            <span className="text-4xl">{mood.emoji}</span>
+          </div>
+          <div>
+            <div className="text-3xl font-light text-gray-200">{mood.text}</div>
+            <div className="text-sm text-gray-500">{total} respostas</div>
+          </div>
+        </div>
+
+        {/* Linha 2: Categorias Positive e Negative */}
+        <div className="flex-1 grid grid-cols-2 gap-8 min-h-0">
+          
+          {/* Positive - Verde */}
+          <div className="flex flex-col">
+            <h3 className="text-2xl font-light text-green-400 text-center mb-4">O que funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-3 content-start overflow-auto">
+              {sortedPositiveCategories.map((category, idx) => {
+                const isTop = idx === 0 && category.count > 0
+                return (
                   <div 
-                    className={`absolute top-0 left-0 right-0 bg-gradient-to-br ${mood.color} transition-all duration-3000`}
-                    style={{ height: `${ratio * 100}%` }}
-                  ></div>
-                </div>
-                
-                {/* Centro com emoji */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-7xl">{mood.emoji}</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Texto principal */}
-            <h2 className="text-5xl font-light text-gray-200 mb-2">
-              {mood.text}
-            </h2>
-            <p className="text-xl text-gray-400 mb-4">
-              {mood.status}
-            </p>
-            
-            {/* Percentual */}
-            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div 
-                className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-3000"
-                style={{ width: `${ratio * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-
-        {/* O que funcionou bem */}
-        <div className="flex items-center">
-          <div className="w-full">
-            <div className="text-center mb-6">
-              <h3 className="text-4xl font-light bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-2">
-                O que funcionou bem
-              </h3>
-            </div>
-            
-            <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 justify-items-center">
-              {CATEGORIES.map((category) => {
-                const count = stats?.positive[category.label] || 0
-                const maxCount = Math.max(...Object.values(stats?.positive || {}))
-                const intensity = maxCount > 0 ? count / maxCount : 0
-                
-                if (count === 0) return null
-                
-                return (
-                  <div key={category.id} className="text-center">
-                    <div className={`
-                      relative w-16 h-16 rounded-2xl bg-gradient-to-br from-green-900/30 to-green-800/20 
-                      border border-green-800/50 flex items-center justify-center
-                      ${intensity > 0.6 ? 'shadow-xl shadow-green-900/50' : ''}
-                    `}>
-                      <div className="text-2xl">{category.icon}</div>
-                    </div>
-                    
-                    <div className="text-sm font-medium text-green-300 mt-2">
-                      {category.label}
+                    key={category.id}
+                    className={`
+                      relative rounded-xl p-3 flex flex-col items-center justify-center
+                      ${isTop ? 'bg-green-900/40 border-2 border-green-500/50 shadow-lg shadow-green-900/30' : 'bg-green-900/20 border border-green-800/30'}
+                    `}
+                  >
+                    <div className="text-3xl mb-1">{category.icon}</div>
+                    <div className="text-xs text-green-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-green-950">
+                      {category.count}
                     </div>
                   </div>
                 )
               })}
+              {sortedPositiveCategories.length === 0 && (
+                <div className="col-span-2 text-center text-gray-600 py-8">Nenhum registro</div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* O que não funcionou bem */}
-        <div className="flex items-center">
-          <div className="w-full">
-            <div className="text-center mb-6">
-              <h3 className="text-4xl font-light bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-2">
-                O que não funcionou bem
-              </h3>
-            </div>
-            
-            <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 justify-items-center">
-              {CATEGORIES.map((category) => {
-                const count = stats?.negative[category.label] || 0
-                const maxCount = Math.max(...Object.values(stats?.negative || {}))
-                const intensity = maxCount > 0 ? count / maxCount : 0
-                
-                if (count === 0) return null
-                
+          {/* Negative - Vermelho */}
+          <div className="flex flex-col">
+            <h3 className="text-2xl font-light text-red-400 text-center mb-4">O que não funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-3 content-start overflow-auto">
+              {sortedNegativeCategories.map((category, idx) => {
+                const isTop = idx === 0 && category.count > 0
                 return (
-                  <div key={category.id} className="text-center">
-                    <div className={`
-                      relative w-16 h-16 rounded-2xl bg-gradient-to-br from-red-900/30 to-red-800/20 
-                      border border-red-800/50 flex items-center justify-center
-                      ${intensity > 0.6 ? 'shadow-xl shadow-red-900/50' : ''}
-                    `}>
-                      <div className="text-2xl">{category.icon}</div>
-                    </div>
-                    
-                    <div className="text-sm font-medium text-red-300 mt-2">
-                      {category.label}
+                  <div 
+                    key={category.id}
+                    className={`
+                      relative rounded-xl p-3 flex flex-col items-center justify-center
+                      ${isTop ? 'bg-red-900/40 border-2 border-red-500/50 shadow-lg shadow-red-900/30' : 'bg-red-900/20 border border-red-800/30'}
+                    `}
+                  >
+                    <div className="text-3xl mb-1">{category.icon}</div>
+                    <div className="text-xs text-red-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-red-950">
+                      {category.count}
                     </div>
                   </div>
                 )
               })}
+              {sortedNegativeCategories.length === 0 && (
+                <div className="col-span-2 text-center text-gray-600 py-8">Nenhum registro</div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Botão para limpar dados */}
-        <button
-          onClick={clearAllData}
-          className="absolute bottom-4 right-4 px-4 py-2 bg-red-900/50 hover:bg-red-800 text-red-400 text-sm rounded-lg transition-colors border border-red-800"
-        >
-          🗑️ Zerar dados
-        </button>
+        {/* Barra de equilíbrio */}
+        <div className="flex items-center justify-center gap-4">
+          <div className="text-green-400 font-medium">{totalPositive} positivos</div>
+          <div className="flex-1 max-w-md h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
+              style={{ width: `${ratio * 100}%` }}
+            ></div>
+          </div>
+          <div className="text-red-400 font-medium">{totalNegative} negativos</div>
+        </div>
       </div>
     </div>
   )

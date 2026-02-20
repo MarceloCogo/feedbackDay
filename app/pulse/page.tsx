@@ -214,12 +214,12 @@ export default function PulsePage() {
         </div>
 
         {/* Linha 2: Categorias Positive e Negative */}
-        <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
+        <div className="flex-1 grid grid-cols-2 gap-6 min-h-0 overflow-hidden">
           
           {/* Positive - Verde */}
-          <div className="flex flex-col min-h-0">
+          <div className="flex flex-col min-h-0 overflow-hidden">
             <h3 className="text-2xl font-light text-green-400 text-center mb-3">O que funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-2 content-center">
+            <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
               {sortedPositiveCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (
@@ -245,9 +245,9 @@ export default function PulsePage() {
           </div>
 
           {/* Negative - Vermelho */}
-          <div className="flex flex-col min-h-0">
+          <div className="flex flex-col min-h-0 overflow-hidden">
             <h3 className="text-2xl font-light text-red-400 text-center mb-3">O que não funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-2 content-center">
+            <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
               {sortedNegativeCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (

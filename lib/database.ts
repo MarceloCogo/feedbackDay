@@ -1,136 +1,136 @@
-import sqlite3 from 'sqlite3'
-import { join } from 'path'
+// Banco de dados em memória - funciona em ambiente serverless
+// Os dados persistem durante a execução da função (até cold start)
 
-const DB_PATH = process.env.NODE_ENV === 'production' 
-  ? '/tmp/feedback.db' 
-  : join(process.cwd(), 'feedback.db')
+interface FeedbackData {
+  id: number
+  positive: string[]
+  negative: string[]
+  date: string
+  source: string
+  createdAt: number
+}
 
-export interface FeedbackData {
-  id?: number
+// Armazenamento em memória (global para persistir entre requisições)
+const globalStore = global as unknown as {
+  feedbackStore: FeedbackData[]
+  nextId: number
+}
+
+if (!globalStore.feedbackStore) {
+  globalStore.feedbackStore = []
+  globalStore.nextId = 1
+}
+
+const feedbackStore = globalStore.feedbackStore
+const nextId = globalStore.nextId
+
+export interface FeedbackInput {
   positive: string[]
   negative: string[]
   date: string
   source: string
 }
 
-export function getDatabase() {
-  const db = new sqlite3.Database(DB_PATH)
+export function saveFeedback(data: FeedbackInput): number {
+  const id = nextId
+  globalStore.nextId++
   
-  // Criar tabela se não existir
-  db.run(`
-    CREATE TABLE IF NOT EXISTS feedback (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      positive TEXT NOT NULL,
-      negative TEXT NOT NULL,
-      date TEXT NOT NULL,
-      source TEXT NOT NULL
-    )
-  `)
+  feedbackStore.push({
+    id,
+    positive: data.positive,
+    negative: data.negative,
+    date: data.date,
+    source: data.source,
+    createdAt: Date.now()
+  })
   
-  return db
+  return id
 }
 
-export function saveFeedback(data: FeedbackData): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    const stmt = db.prepare(`
-      INSERT INTO feedback (positive, negative, date, source)
-      VALUES (?, ?, ?, ?)
-    `)
-    
-    stmt.run([
-      JSON.stringify(data.positive),
-      JSON.stringify(data.negative),
-      data.date,
-      data.source
-    ], function(err) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(this.lastID)
-      }
-    })
-    
-    stmt.finalize()
-    db.close()
-  })
+export function getAllFeedback(): FeedbackData[] {
+  return [...feedbackStore].sort((a, b) => b.createdAt - a.createdAt)
 }
 
-export function getAllFeedback(): Promise<FeedbackData[]> {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    db.all(`
-      SELECT * FROM feedback ORDER BY date DESC
-    `, (err, rows: any[]) => {
-      if (err) {
-        reject(err)
-      } else {
-        const feedback = rows.map(row => ({
-          id: row.id,
-          positive: JSON.parse(row.positive),
-          negative: JSON.parse(row.negative),
-          date: row.date,
-          source: row.source
-        }))
-        resolve(feedback)
-      }
-    })
-    
-    db.close()
-  })
+export function getFeedbackByDate(dateStr: string): FeedbackData[] {
+  return feedbackStore
+    .filter(f => f.date.startsWith(dateStr))
+    .sort((a, b) => b.createdAt - a.createdAt)
 }
 
 export function getFeedbackStats() {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase()
-    db.all(`
-      SELECT positive, negative FROM feedback
-    `, (err, rows: any[]) => {
-      if (err) {
-        reject(err)
-      } else {
-        const allFeedback = rows.map(row => ({
-          positive: JSON.parse(row.positive),
-          negative: JSON.parse(row.negative)
-        }))
-        
-        const categories = [
-          'Dinâmica do dia',
-          'Reuniões', 
-          'Comunicação',
-          'Espaço de trabalho',
-          'Foco / Produtividade',
-          'Colaboração'
-        ]
-        
-        const stats = {
-          total: rows.length,
-          positive: {} as Record<string, number>,
-          negative: {} as Record<string, number>
-        }
-        
-        categories.forEach(cat => {
-          stats.positive[cat] = 0
-          stats.negative[cat] = 0
-        })
-        
-        allFeedback.forEach(feedback => {
-          feedback.positive.forEach((cat: string) => {
-            if (stats.positive[cat] !== undefined) {
-              stats.positive[cat]++
-            }
-          })
-          feedback.negative.forEach((cat: string) => {
-            if (stats.negative[cat] !== undefined) {
-              stats.negative[cat]++
-            }
-          })
-        })
-        
-        resolve(stats)
+  const stats = {
+    total: feedbackStore.length,
+    positive: {} as Record<string, number>,
+    negative: {} as Record<string, number>
+  }
+  
+  const categories = [
+    'Dinâmica do dia',
+    'Reuniões', 
+    'Comunicação',
+    'Espaço de trabalho',
+    'Foco / Produtividade',
+    'Colaboração',
+    'Nada a destacar hoje'
+  ]
+  
+  categories.forEach(cat => {
+    stats.positive[cat] = 0
+    stats.negative[cat] = 0
+  })
+  
+  feedbackStore.forEach(feedback => {
+    feedback.positive.forEach((cat: string) => {
+      if (stats.positive[cat] !== undefined) {
+        stats.positive[cat]++
       }
     })
-    
-    db.close()
+    feedback.negative.forEach((cat: string) => {
+      if (stats.negative[cat] !== undefined) {
+        stats.negative[cat]++
+      }
+    })
   })
+  
+  return stats
+}
+
+export function getFeedbackStatsByDate(dateStr: string) {
+  const dayFeedback = feedbackStore.filter(f => f.date.startsWith(dateStr))
+  
+  const stats = {
+    total: dayFeedback.length,
+    positive: {} as Record<string, number>,
+    negative: {} as Record<string, number>
+  }
+  
+  const categories = [
+    'Dinâmica do dia',
+    'Reuniões', 
+    'Comunicação',
+    'Espaço de trabalho',
+    'Foco / Produtividade',
+    'Colaboração',
+    'Nada a destacar hoje'
+  ]
+  
+  categories.forEach(cat => {
+    stats.positive[cat] = 0
+    stats.negative[cat] = 0
+  })
+  
+  dayFeedback.forEach(feedback => {
+    feedback.positive.forEach((cat: string) => {
+      if (stats.positive[cat] !== undefined) {
+        stats.positive[cat]++
+      }
+    })
+    feedback.negative.forEach((cat: string) => {
+      if (stats.negative[cat] !== undefined) {
+        stats.negative[cat]++
+      }
+    })
+  })
+  
+  return stats
 }

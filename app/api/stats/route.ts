@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server'
-import { getFeedbackStats } from '@/lib/database'
+import { getFeedbackStats, getFeedbackStatsByDate } from '@/lib/database'
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const stream = url.searchParams.get('stream') === 'true'
+  const date = url.searchParams.get('date')
 
   if (stream) {
     // Server-Sent Events para tempo real
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       start(controller) {
-        const sendStats = async () => {
+        const sendStats = () => {
           try {
-            const stats = await getFeedbackStats()
+            const stats = date 
+              ? getFeedbackStatsByDate(date)
+              : getFeedbackStats()
             const data = `data: ${JSON.stringify(stats)}\n\n`
             controller.enqueue(encoder.encode(data))
           } catch (error) {
@@ -45,9 +48,11 @@ export async function GET(request: Request) {
     })
   }
 
-  // Endpoint JSON normal para compatibilidade
+  // Endpoint JSON normal
   try {
-    const stats = await getFeedbackStats()
+    const stats = date 
+      ? getFeedbackStatsByDate(date)
+      : getFeedbackStats()
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching stats:', error)

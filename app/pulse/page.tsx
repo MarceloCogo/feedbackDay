@@ -202,23 +202,23 @@ export default function PulsePage() {
       {/* Conteúdo principal */}
       <div className={`h-[calc(100vh-4rem)] px-4 py-2 grid grid-rows-[auto_1_auto] gap-2 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
         
-        {/* Linha 1: Emoji do clima (menor) + Status */}
-        <div className="flex items-center justify-center gap-6">
-          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
-            <span className="text-4xl">{mood.emoji}</span>
+        {/* Linha 1: Emoji do clima + Status */}
+        <div className="flex items-center justify-center gap-3">
+          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
+            <span className="text-2xl">{mood.emoji}</span>
           </div>
-          <div>
-            <div className="text-3xl font-light text-gray-200">{mood.text}</div>
-            <div className="text-sm text-gray-500">{total} respostas</div>
+          <div className="text-center">
+            <div className="text-xl font-light text-gray-200">{mood.text}</div>
+            <div className="text-xs text-gray-500">{total} votes</div>
           </div>
         </div>
 
         {/* Linha 2: Categorias Positive e Negative */}
-        <div className="flex-1 grid grid-cols-2 gap-6 min-h-0 overflow-hidden">
+        <div className="flex-1 grid grid-cols-2 gap-3 min-h-0 overflow-hidden">
           
           {/* Positive - Verde */}
           <div className="flex flex-col min-h-0 overflow-hidden">
-            <h3 className="text-2xl font-light text-green-400 text-center mb-3">O que funcionou bem</h3>
+            <h3 className="text-lg font-light text-green-400 text-center mb-2">O que funcionou bem</h3>
             <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
               {sortedPositiveCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
@@ -226,27 +226,27 @@ export default function PulsePage() {
                   <div 
                     key={category.id}
                     className={`
-                      relative rounded-lg p-2 flex flex-col items-center justify-center aspect-square
+                      relative rounded-lg p-1 flex flex-col items-center justify-center
                       ${isTop ? 'bg-green-900/40 border-2 border-green-500/50 shadow-lg shadow-green-900/30' : 'bg-green-900/20 border border-green-800/30'}
                     `}
                   >
-                    <div className="text-2xl mb-1">{category.icon}</div>
-                    <div className="text-xs text-green-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-green-950">
+                    <div className="text-lg mb-1">{category.icon}</div>
+                    <div className="text-[10px] text-green-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-green-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedPositiveCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
               )}
             </div>
           </div>
 
           {/* Negative - Vermelho */}
           <div className="flex flex-col min-h-0 overflow-hidden">
-            <h3 className="text-2xl font-light text-red-400 text-center mb-3">O que não funcionou bem</h3>
+            <h3 className="text-lg font-light text-red-400 text-center mb-2">O que não funcionou bem</h3>
             <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
               {sortedNegativeCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
@@ -254,20 +254,20 @@ export default function PulsePage() {
                   <div 
                     key={category.id}
                     className={`
-                      relative rounded-lg p-2 flex flex-col items-center justify-center aspect-square
+                      relative rounded-lg p-1 flex flex-col items-center justify-center
                       ${isTop ? 'bg-red-900/40 border-2 border-red-500/50 shadow-lg shadow-red-900/30' : 'bg-red-900/20 border border-red-800/30'}
                     `}
                   >
-                    <div className="text-2xl mb-1">{category.icon}</div>
-                    <div className="text-xs text-red-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-red-950">
+                    <div className="text-lg mb-1">{category.icon}</div>
+                    <div className="text-[10px] text-red-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-red-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedNegativeCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
               )}
             </div>
           </div>

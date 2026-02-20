@@ -173,8 +173,8 @@ export default function PulsePage() {
         <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
           <div className="text-center">
             <div className="text-7xl mb-6 animate-pulse">⏳</div>
-            <h2 className="text-4xl font-light text-gray-300 mb-3">Aguardando feedbacks</h2>
-            <p className="text-xl text-gray-500">O espaço está pronto para as primeiras impressões</p>
+            <h2 className="text-4xl font-light text-gray-300 mb-3">Aguardando</h2>
+            <p className="text-xl text-gray-500">Sem dados ainda</p>
           </div>
         </div>
       </div>
@@ -202,14 +202,14 @@ export default function PulsePage() {
       {/* Conteúdo principal */}
       <div className={`h-[calc(100vh-4rem)] px-4 py-2 grid grid-rows-[auto_1_auto] gap-2 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
         
-        {/* Linha 1: Emoji do clima (menor) + Status */}
-        <div className="flex items-center justify-center gap-6">
-          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
-            <span className="text-4xl">{mood.emoji}</span>
+        {/* Linha 1: Emoji do clima + Status */}
+        <div className="flex items-center justify-center gap-4">
+          <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
+            <span className="text-3xl">{mood.emoji}</span>
           </div>
-          <div>
-            <div className="text-3xl font-light text-gray-200">{mood.text}</div>
-            <div className="text-sm text-gray-500">{total} respostas</div>
+          <div className="text-center">
+            <div className="text-2xl font-light text-gray-200">{mood.text}</div>
+            <div className="text-sm text-gray-500">{total} votes</div>
           </div>
         </div>
 
@@ -239,7 +239,7 @@ export default function PulsePage() {
                 )
               })}
               {sortedPositiveCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
               )}
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function PulsePage() {
                 )
               })}
               {sortedNegativeCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum registro</div>
+                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
               )}
             </div>
           </div>

@@ -60,7 +60,10 @@ O projeto está configurado para acesso público sem autenticação!
 - Acesse `https://seu-projeto.vercel.app/pulse`
 - **Experiência visual e emocional** do time
 - Design cinematográfico dark mode para TVs e telas grandes
-- Indicadores visuais do clima do dia
+- Layout responsivo com painéis organizados e grades de categorias
+- Barra proporcional mostrando distribuição real de positivos/negativos
+- Contador total mostra número de participantes (não seleções)
+- Navegação por datas com filtro preciso por timezone local
 - Feedback em tempo real com animações elegantes
 
 ## 🗂️ Estrutura do Projeto
@@ -77,7 +80,7 @@ feedbackDay/
 │   ├── layout.tsx         # Layout principal
 │   └── page.tsx           # Página de feedback
 ├── lib/
-│   └── database.ts        # Configuração do SQLite
+│   └── database.ts        # Configuração do Redis
 ├── components/            # Componentes reutilizáveis
 └── utils/                 # Utilitários
 ```
@@ -96,6 +99,7 @@ Salva um novo feedback.
   "source": "tablet" // ou "link"
 }
 ```
+**Nota**: A data é enviada em UTC, mas as estatísticas filtram por dia local (America/Sao_Paulo).
 
 ### GET /api/stats
 Retorna estatísticas dos feedbacks.
@@ -174,17 +178,28 @@ A aplicação está **100% compatível com Vercel**:
 - **Estilo**: Tailwind CSS
 - **Gráficos**: Recharts
 - **Backend**: API Routes (Next.js)
-- **Banco de dados**: SQLite3
+- **Banco de dados**: Redis (Upstash)
 - **Tempo Real**: Server-Sent Events (SSE)
 - **Node.js**: 24.x (compatibilidade Vercel)
 
 ## 📝 Notas Técnicas
 
-- **Banco de dados**: SQLite criado automaticamente na primeira execução (`feedback.db`)
+- **Banco de dados**: Redis (Upstash) para armazenamento em nuvem
+- **Filtragem por data**: Usa timezone local (America/Sao_Paulo) para precisão
+- **Opção "Nada a destacar hoje"**: Não conta nos indicadores, mas computa no total de participantes
+- **Prevenção de conflitos**: Formulário impede seleção da mesma categoria em positivo e negativo
 - **Anonimato**: Nenhum dado pessoal ou identificável é armazenado
-- **Responsivo**: Interface adaptada para desktop, tablet e mobile
+- **Responsivo**: Interface adaptada para TV, desktop, tablet e mobile
 - **Performance**: Build estático para frontend, server-side para API routes
 - **Acesso Público**: Configurado para funcionar sem autenticação
+
+## ✨ Melhorias Recentes
+
+- **Layout /pulse redesenhado**: Painéis organizados, grades responsivas, barra proporcional
+- **Filtros por data aprimorados**: Precisão com timezone local, badges internos
+- **Contador corrigido**: Mostra participantes, não seleções
+- **Formulário inteligente**: Previne conflitos entre positivo/negativo
+- **Semântica visual**: Indicadores excluindo "Nada a destacar hoje"
 
 ## 🤝 Contribuições
 

@@ -31,24 +31,30 @@ function FeedbackPageContent() {
 
   const toggleCategory = (categoryLabel: string, type: 'positive' | 'negative') => {
     if (type === 'positive') {
+      // Não permitir selecionar se já está em negativo
+      if (selectedNegative.includes(categoryLabel)) return;
+
       // Se marcar uma categoria, desmarcar "Nada a destacar hoje"
       if (!selectedPositive.includes(categoryLabel)) {
         setNoPositiveSelection(false)
       }
-      
-      setSelectedPositive(prev => 
-        prev.includes(categoryLabel) 
+
+      setSelectedPositive(prev =>
+        prev.includes(categoryLabel)
           ? prev.filter(c => c !== categoryLabel)
           : [...prev, categoryLabel]
       )
     } else {
+      // Não permitir selecionar se já está em positivo
+      if (selectedPositive.includes(categoryLabel)) return;
+
       // Se marcar uma categoria, desmarcar "Nada a destacar hoje"
       if (!selectedNegative.includes(categoryLabel)) {
         setNoNegativeSelection(false)
       }
-      
-      setSelectedNegative(prev => 
-        prev.includes(categoryLabel) 
+
+      setSelectedNegative(prev =>
+        prev.includes(categoryLabel)
           ? prev.filter(c => c !== categoryLabel)
           : [...prev, categoryLabel]
       )
@@ -180,11 +186,11 @@ function FeedbackPageContent() {
                 <button
                   key={category.id}
                   onClick={() => toggleCategory(category.label, 'positive')}
-                  disabled={noPositiveSelection}
+                  disabled={noPositiveSelection || selectedNegative.includes(category.label)}
                   className={`p-6 rounded-xl border-2 transition-all transform hover:scale-105 ${
                     selectedPositive.includes(category.label)
                       ? 'bg-positive text-white border-positive'
-                      : noPositiveSelection
+                      : noPositiveSelection || selectedNegative.includes(category.label)
                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-positive'
                   }`}
@@ -241,11 +247,11 @@ function FeedbackPageContent() {
                 <button
                   key={category.id}
                   onClick={() => toggleCategory(category.label, 'negative')}
-                  disabled={noNegativeSelection}
+                  disabled={noNegativeSelection || selectedPositive.includes(category.label)}
                   className={`p-6 rounded-xl border-2 transition-all transform hover:scale-105 ${
                     selectedNegative.includes(category.label)
                       ? 'bg-negative text-white border-negative'
-                      : noNegativeSelection
+                      : noNegativeSelection || selectedPositive.includes(category.label)
                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-negative'
                   }`}

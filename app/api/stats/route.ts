@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server'
 import { getFeedbackStats, getFeedbackStatsByDate } from '@/lib/database'
+import { z } from 'zod'
+
+const dateParamSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const stream = url.searchParams.get('stream') === 'true'
   const date = url.searchParams.get('date')
+
+  // Validate date param if provided
+  if (date) {
+    const validation = dateParamSchema.safeParse(date)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid date format. Use YYYY-MM-DD' },
+        { status: 400 }
+      )
+    }
+  }
 
   if (stream) {
     // Server-Sent Events para tempo real

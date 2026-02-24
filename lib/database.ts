@@ -134,12 +134,12 @@ export async function getFeedbackStatsByDate(dateStr: string) {
 
   dayFeedback.forEach((feedback: FeedbackData) => {
     feedback.positive.forEach((cat: string) => {
-      if (stats.positive[cat] !== undefined) {
+      if (cat !== 'Nada a destacar hoje' && stats.positive[cat] !== undefined) {
         stats.positive[cat]++
       }
     })
     feedback.negative.forEach((cat: string) => {
-      if (stats.negative[cat] !== undefined) {
+      if (cat !== 'Nada a destacar hoje' && stats.negative[cat] !== undefined) {
         stats.negative[cat]++
       }
     })

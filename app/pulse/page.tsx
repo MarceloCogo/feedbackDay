@@ -293,10 +293,14 @@ export default function PulsePage() {
         {/* Barra de equilíbrio */}
         <div className="flex items-center justify-center gap-2 md:gap-4 mt-1 md:mt-2">
           <div className="text-green-400 font-medium text-sm md:text-base">{totalPositive} positivos</div>
-          <div className="flex-1 max-w-xs md:max-w-md h-3 md:h-4 bg-gray-800 rounded-full overflow-hidden">
+          <div className="flex-1 max-w-xs md:max-w-md h-3 md:h-4 bg-gray-800 rounded-full relative overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-500"
-              style={{ width: `${ratio * 100}%` }}
+              className="absolute right-1/2 top-0 h-full bg-gradient-to-l from-green-500 to-yellow-500 rounded-l-full transition-all duration-500"
+              style={{ width: `${ratio * 50}%` }}
+            ></div>
+            <div
+              className="absolute left-1/2 top-0 h-full bg-gradient-to-r from-yellow-500 to-red-500 rounded-r-full transition-all duration-500"
+              style={{ width: `${(1 - ratio) * 50}%` }}
             ></div>
           </div>
           <div className="text-red-400 font-medium text-sm md:text-base">{totalNegative} negativos</div>

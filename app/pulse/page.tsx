@@ -137,11 +137,12 @@ export default function PulsePage() {
     )
   }
 
-  const totalPositive = Object.values(stats?.positive || {}).reduce((sum, count) => sum + count, 0)
-  const totalNegative = Object.values(stats?.negative || {}).reduce((sum, count) => sum + count, 0)
-  const total = totalPositive + totalNegative
-  const hasNoData = total === 0
-  const ratio = total > 0 ? totalPositive / total : 0.5
+   const totalPositive = Object.values(stats?.positive || {}).reduce((sum, count) => sum + count, 0)
+   const totalNegative = Object.values(stats?.negative || {}).reduce((sum, count) => sum + count, 0)
+   const totalSelections = totalPositive + totalNegative
+   const total = stats?.total || 0
+   const hasNoData = total === 0
+   const ratio = totalSelections > 0 ? totalPositive / totalSelections : 0.5
 
   const getDayMood = () => {
     if (hasNoData) return { emoji: '⏳', color: 'from-gray-600 to-gray-400', text: 'Aguardando' }
@@ -296,11 +297,11 @@ export default function PulsePage() {
           <div className="flex-1 max-w-xs md:max-w-md h-3 md:h-4 bg-gray-800 rounded-full flex overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-green-500 to-yellow-500 transition-all duration-500"
-              style={{ width: `${total > 0 ? (totalPositive / total) * 100 : 50}%` }}
+              style={{ width: `${totalSelections > 0 ? (totalPositive / totalSelections) * 100 : 50}%` }}
             ></div>
             <div
               className="h-full bg-gradient-to-r from-yellow-500 to-red-500 transition-all duration-500"
-              style={{ width: `${total > 0 ? (totalNegative / total) * 100 : 50}%` }}
+              style={{ width: `${totalSelections > 0 ? (totalNegative / totalSelections) * 100 : 50}%` }}
             ></div>
           </div>
           <div className="text-red-400 font-medium text-sm md:text-base">{totalNegative} negativos</div>

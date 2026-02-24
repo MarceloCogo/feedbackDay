@@ -295,7 +295,7 @@ export default function PulsePage() {
           <div className="text-green-400 font-medium text-sm md:text-base">{totalPositive} positivos</div>
           <div className="flex-1 max-w-xs md:max-w-md h-3 md:h-4 bg-gray-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-500"
               style={{ width: `${ratio * 100}%` }}
             ></div>
           </div>

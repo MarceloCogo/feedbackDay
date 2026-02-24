@@ -249,7 +249,7 @@ export default function PulsePage() {
                   >
                     <div className="text-xl md:text-2xl mb-1">{category.icon}</div>
                     <div className="text-[10px] md:text-xs text-green-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-green-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-green-950">
+                    <div className="absolute top-1 right-1 w-5 h-5 md:w-6 md:h-6 bg-green-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-green-950">
                       {category.count}
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export default function PulsePage() {
                   >
                     <div className="text-xl md:text-2xl mb-1">{category.icon}</div>
                     <div className="text-[10px] md:text-xs text-red-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-red-950">
+                    <div className="absolute top-1 right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-red-950">
                       {category.count}
                     </div>
                   </div>

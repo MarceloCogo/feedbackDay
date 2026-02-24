@@ -217,89 +217,89 @@ export default function PulsePage() {
       </div>
 
       {/* Conteúdo principal */}
-      <div className={`h-[calc(100vh-4rem)] px-4 py-2 grid grid-rows-[auto_1_auto] gap-2 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
-        
+      <div className={`h-[calc(100vh-4rem)] px-2 py-1 md:px-4 md:py-2 grid grid-rows-[auto_auto_auto] gap-1 md:gap-2 transition-opacity duration-300 ${transitioning ? 'opacity-50' : 'opacity-100'}`}>
+
         {/* Linha 1: Emoji do clima + Status */}
-        <div className="flex items-center justify-center gap-3">
-          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
-            <span className="text-2xl">{mood.emoji}</span>
+        <div className="flex items-center justify-center gap-2 md:gap-3">
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${mood.color} flex items-center justify-center shadow-lg`}>
+            <span className="text-lg md:text-xl">{mood.emoji}</span>
           </div>
           <div className="text-center">
-            <div className="text-xl font-light text-gray-200">{mood.text}</div>
-            <div className="text-xs text-gray-500">{total} votes</div>
+            <div className="text-sm md:text-base font-light text-gray-200">{mood.text}</div>
+            <div className="text-[10px] md:text-xs text-gray-500">{total} votes</div>
           </div>
         </div>
 
-        {/* Linha 2: Categorias Positive e Negative */}
-        <div className="flex-1 grid grid-cols-2 gap-3 min-h-0 overflow-hidden">
-          
-          {/* Positive - Verde */}
-          <div className="flex flex-col min-h-0 overflow-hidden">
-            <h3 className="text-lg font-light text-green-400 text-center mb-2">O que funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
+        {/* Linha 2: Painéis Positive e Negative */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 min-h-0 overflow-hidden">
+
+          {/* Painel Positive - Verde */}
+          <div className="flex flex-col min-h-0 overflow-hidden bg-gray-900/20 rounded-lg p-2 md:p-3">
+            <h3 className="text-sm md:text-lg font-light text-green-400 text-center mb-1 md:mb-2">O que funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-1 md:gap-2 overflow-hidden">
               {sortedPositiveCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (
-                  <div 
+                  <div
                     key={category.id}
                     className={`
-                      relative rounded-lg p-1 flex flex-col items-center justify-center
+                      relative rounded-lg p-2 md:p-3 flex flex-col items-center justify-center min-h-[60px] md:min-h-[80px]
                       ${isTop ? 'bg-green-900/40 border-2 border-green-500/50 shadow-lg shadow-green-900/30' : 'bg-green-900/20 border border-green-800/30'}
                     `}
                   >
-                    <div className="text-lg mb-1">{category.icon}</div>
-                    <div className="text-[10px] text-green-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-green-950">
+                    <div className="text-xl md:text-2xl mb-1">{category.icon}</div>
+                    <div className="text-[10px] md:text-xs text-green-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-green-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-green-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedPositiveCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
+                <div className="col-span-2 text-center text-gray-600 text-sm">Nenhum</div>
               )}
             </div>
           </div>
 
-          {/* Negative - Vermelho */}
-          <div className="flex flex-col min-h-0 overflow-hidden">
-            <h3 className="text-lg font-light text-red-400 text-center mb-2">O que não funcionou bem</h3>
-            <div className="flex-1 grid grid-cols-2 gap-2 content-center overflow-hidden">
+          {/* Painel Negative - Vermelho */}
+          <div className="flex flex-col min-h-0 overflow-hidden bg-gray-900/20 rounded-lg p-2 md:p-3">
+            <h3 className="text-sm md:text-lg font-light text-red-400 text-center mb-1 md:mb-2">O que não funcionou bem</h3>
+            <div className="flex-1 grid grid-cols-2 gap-1 md:gap-2 overflow-hidden">
               {sortedNegativeCategories.map((category, idx) => {
                 const isTop = idx === 0 && category.count > 0
                 return (
-                  <div 
+                  <div
                     key={category.id}
                     className={`
-                      relative rounded-lg p-1 flex flex-col items-center justify-center
+                      relative rounded-lg p-2 md:p-3 flex flex-col items-center justify-center min-h-[60px] md:min-h-[80px]
                       ${isTop ? 'bg-red-900/40 border-2 border-red-500/50 shadow-lg shadow-red-900/30' : 'bg-red-900/20 border border-red-800/30'}
                     `}
                   >
-                    <div className="text-lg mb-1">{category.icon}</div>
-                    <div className="text-[10px] text-red-300 text-center leading-tight">{category.label}</div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-red-950">
+                    <div className="text-xl md:text-2xl mb-1">{category.icon}</div>
+                    <div className="text-[10px] md:text-xs text-red-300 text-center leading-tight">{category.label}</div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-red-950">
                       {category.count}
                     </div>
                   </div>
                 )
               })}
               {sortedNegativeCategories.length === 0 && (
-                <div className="col-span-2 text-center text-gray-600">Nenhum</div>
+                <div className="col-span-2 text-center text-gray-600 text-sm">Nenhum</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Barra de equilíbrio */}
-        <div className="flex items-center justify-center gap-4">
-          <div className="text-green-400 font-medium">{totalPositive} positivos</div>
-          <div className="flex-1 max-w-md h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div 
+        <div className="flex items-center justify-center gap-2 md:gap-4 mt-1 md:mt-2">
+          <div className="text-green-400 font-medium text-sm md:text-base">{totalPositive} positivos</div>
+          <div className="flex-1 max-w-xs md:max-w-md h-3 md:h-4 bg-gray-800 rounded-full overflow-hidden">
+            <div
               className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
               style={{ width: `${ratio * 100}%` }}
             ></div>
           </div>
-          <div className="text-red-400 font-medium">{totalNegative} negativos</div>
+          <div className="text-red-400 font-medium text-sm md:text-base">{totalNegative} negativos</div>
         </div>
       </div>
     </div>

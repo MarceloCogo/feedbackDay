@@ -106,29 +106,41 @@ export async function getFeedbackStats() {
 
 export async function getFeedbackStatsByDate(dateStr: string) {
   const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
-  const dayFeedback = feedbacks.filter((f: FeedbackData) => f.date.startsWith(dateStr))
-  
+
+  // Calculate start and end of day in America/Sao_Paulo timezone (UTC-3, ignoring DST for simplicity)
+  const offset = -3 * 60 * 60 * 1000 // -3 hours in ms
+  const date = new Date(dateStr + 'T00:00:00')
+  const startLocal = new Date(date.getTime() + offset)
+  startLocal.setHours(0, 0, 0, 0)
+  const start = startLocal.getTime() - offset
+
+  const endLocal = new Date(date.getTime() + offset)
+  endLocal.setHours(23, 59, 59, 999)
+  const end = endLocal.getTime() - offset
+
+  const dayFeedback = feedbacks.filter((f: FeedbackData) => f.createdAt >= start && f.createdAt <= end)
+
   const stats = {
     total: dayFeedback.length,
     positive: {} as Record<string, number>,
     negative: {} as Record<string, number>
   }
-  
+
   const categories = [
     'Dinâmica do dia',
-    'Reuniões', 
+    'Reuniões',
     'Comunicação',
     'Espaço de trabalho',
     'Foco / Produtividade',
     'Colaboração',
     'Nada a destacar hoje'
   ]
-  
+
   categories.forEach(cat => {
     stats.positive[cat] = 0
     stats.negative[cat] = 0
   })
-  
+
   dayFeedback.forEach((feedback: FeedbackData) => {
     feedback.positive.forEach((cat: string) => {
       if (stats.positive[cat] !== undefined) {
@@ -141,8 +153,27 @@ export async function getFeedbackStatsByDate(dateStr: string) {
       }
     })
   })
-  
+
   return stats
+}
+
+export async function clearFeedbackByDate(dateStr: string) {
+  const feedbacks = await redis.get<FeedbackData[]>(FEEDBACKS_KEY) || []
+
+  // Calculate start and end of day in America/Sao_Paulo timezone
+  const offset = -3 * 60 * 60 * 1000 // -3 hours in ms
+  const date = new Date(dateStr + 'T00:00:00')
+  const startLocal = new Date(date.getTime() + offset)
+  startLocal.setHours(0, 0, 0, 0)
+  const start = startLocal.getTime() - offset
+
+  const endLocal = new Date(date.getTime() + offset)
+  endLocal.setHours(23, 59, 59, 999)
+  const end = endLocal.getTime() - offset
+
+  const remainingFeedbacks = feedbacks.filter((f: FeedbackData) => !(f.createdAt >= start && f.createdAt <= end))
+
+  await redis.set(FEEDBACKS_KEY, remainingFeedbacks)
 }
 
 export async function clearAllFeedback() {

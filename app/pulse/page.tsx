@@ -40,7 +40,7 @@ export default function PulsePage() {
   const fetchStats = async (date: Date) => {
     try {
       setLoading(true)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD in local timezone
       const response = await fetch(`/api/stats?date=${dateStr}`)
       if (response.ok) {
         const data = await response.json()
@@ -78,11 +78,13 @@ export default function PulsePage() {
     }
   }
 
-  const clearAllData = async () => {
-    if (confirm('Tem certeza que deseja zerar todos os dados?')) {
+  const clearSelectedDayData = async () => {
+    const dateStr = selectedDate.toLocaleDateString('en-CA')
+    if (confirm(`Tem certeza que deseja zerar os dados do dia ${formatDateForDisplay(selectedDate)}?`)) {
       try {
-        await fetch('/api/feedback/clear', { method: 'POST' })
-        window.location.reload()
+        await fetch(`/api/feedback/clear?date=${dateStr}`, { method: 'POST' })
+        // Refetch stats after clearing
+        fetchStats(selectedDate)
       } catch (error) {
         console.error('Error clearing data:', error)
       }
@@ -91,10 +93,11 @@ export default function PulsePage() {
 
   useEffect(() => {
     fetchStats(selectedDate)
-    
+
     const today = new Date()
     if (selectedDate.toDateString() === today.toDateString()) {
-      const eventSource = new EventSource('/api/stats?stream=true')
+      const dateStr = selectedDate.toLocaleDateString('en-CA')
+      const eventSource = new EventSource(`/api/stats?stream=true&date=${dateStr}`)
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
@@ -108,6 +111,16 @@ export default function PulsePage() {
   }, [selectedDate])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  const goToToday = () => {
+    setTransitioning(true)
+    setTimeout(() => {
+      const today = new Date()
+      setSelectedDate(today)
+      fetchStats(today)
+      setTimeout(() => setTransitioning(false), 300)
+    }, 150)
+  }
 
   if (loading && !stats) {
     return (
@@ -162,11 +175,14 @@ export default function PulsePage() {
             <span className="text-gray-200 font-medium min-w-[70px] text-center">{formatDateForDisplay(selectedDate)}</span>
             <button onClick={goToNextDay} disabled={isToday} className={`text-lg ${isToday ? 'text-gray-700' : 'text-gray-400 hover:text-gray-200'}`}>▶</button>
           </div>
-          
+
           <h1 className="text-2xl font-light text-gray-300">Feedback do Dia</h1>
-          
-          {isToday && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
-          <button onClick={clearAllData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
+
+          <div className="flex items-center gap-4">
+            {!isToday && <button onClick={goToToday} className="px-3 py-1 bg-blue-900/30 hover:bg-blue-800/50 text-blue-400 text-xs rounded border border-blue-800">Hoje</button>}
+            {isToday && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
+            <button onClick={clearSelectedDayData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
+          </div>
         </div>
 
         {/* Centro */}
@@ -194,8 +210,9 @@ export default function PulsePage() {
         <h1 className="text-2xl font-light text-gray-300">Feedback do Dia</h1>
         
         <div className="flex items-center gap-4">
+          {!isToday && <button onClick={goToToday} className="px-3 py-1 bg-blue-900/30 hover:bg-blue-800/50 text-blue-400 text-xs rounded border border-blue-800">Hoje</button>}
           {isToday && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
-          <button onClick={clearAllData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
+          <button onClick={clearSelectedDayData} className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-xs rounded border border-red-800">🗑️ Zerar</button>
         </div>
       </div>
 
